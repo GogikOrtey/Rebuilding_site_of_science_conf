@@ -1,0 +1,105 @@
+---
+/**
+ * src/pages/index.astro — временный хаб выбора визуального направления.
+ *
+ * Что делает: показывает список четырёх прототипов дизайна с коротким
+ * описанием каждого, чтобы их можно было быстро сравнить перед выбором.
+ *
+ * Как работает: страница служебная и помечена noindex. После того как
+ * направление выбрано, этот файл заменяется настоящей главной страницей
+ * конференции, а `src/pages/proto/*` удаляются.
+ *
+ * Связан с: `src/layouts/BaseLayout.astro`, страницы `src/pages/proto/*`.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Container from '~/components/common/Container.astro';
+import '~/styles/themes/swiss.css';
+
+const variants = [
+  {
+    n: '01',
+    href: '/proto/1',
+    name: 'Swiss Editorial',
+    idea: 'Светлая бумага, крупный плотный гротеск, жёсткая сетка с линейками, один оранжевый акцент. Тёмные «якорные» секции разбивают страницу по ритму.',
+    mood: 'Строго, дорого, как научный журнал или биеннале',
+    tech: 'Inter Tight + Inter, CSS-переходы, без JS-библиотек',
+  },
+  {
+    n: '02',
+    href: '/proto/2',
+    name: 'Deep Blue Institutional',
+    idea: 'Глубокий тёмно-синий, золотой и бирюзовый акценты, координатная сетка на фоне и живой граф связей как метафора социального капитала.',
+    mood: 'Международный форум, технологично и представительно',
+    tech: 'Unbounded + Inter, canvas-граф на островке',
+  },
+  {
+    n: '03',
+    href: '/proto/3',
+    name: 'Soft Sunlight',
+    idea: 'Тёплый бумажный фон, мягкие солнечные лучи, парящие low-poly объекты с округлыми гранями: пробирка с синей жидкостью, деревянные ступени и другие предметы.',
+    mood: 'Спокойно, тепло, по-человечески',
+    tech: 'Onest + Inter, Three.js со процедурной геометрией',
+  },
+  {
+    n: '04',
+    href: '/proto/4',
+    name: 'Kinetic',
+    idea: 'Почти чёрная база, кислотный лайм, крупная кинетическая типографика. Скролл-хореография: пины, построчные маски, горизонтальные ленты, параллакс.',
+    mood: 'Энергично, современно, запоминается',
+    tech: 'Inter Tight, GSAP + ScrollTrigger',
+  },
+];
+---
+
+<BaseLayout
+  title="Варианты визуального направления — сайт конференции"
+  description="Служебная страница: четыре прототипа дизайна сайта конференции для выбора направления."
+  theme="theme-swiss"
+  noindex
+>
+  <main id="main" class="min-h-dvh bg-bg py-16 sm:py-24">
+    <Container>
+      <p class="eyebrow text-accent">Служебная страница</p>
+      <h1 class="mt-5 max-w-3xl text-headline font-semibold">
+        Четыре визуальных направления сайта конференции
+      </h1>
+      <p class="mt-5 max-w-2xl text-lead text-ink-2">
+        Каждый прототип показывает hero и ключевые секции в своём визуальном языке. Контент во всех
+        вариантах одинаковый — сравнивать нужно подачу, а не текст.
+      </p>
+
+      <ul class="mt-14 border-t border-line">
+        {
+          variants.map((v, i) => (
+            <li class="border-b border-line" data-reveal data-reveal-delay={i * 90}>
+              <a
+                href={v.href}
+                class="group grid gap-x-8 gap-y-4 py-8 transition-colors duration-200 hover:bg-bg-alt sm:grid-cols-[5rem_1fr_auto] sm:items-baseline sm:px-4 sm:-mx-4"
+              >
+                <span class="font-mono text-sm text-ink-3">{v.n}</span>
+
+                <span class="block">
+                  <span class="block text-title font-semibold group-hover:text-accent">
+                    {v.name}
+                  </span>
+                  <span class="mt-2 block max-w-xl text-ink-2">{v.idea}</span>
+                  <span class="mt-3 block text-sm text-ink-3">
+                    {v.mood} · {v.tech}
+                  </span>
+                </span>
+
+                <span
+                  class="inline-flex items-center gap-2 text-sm font-medium whitespace-nowrap sm:justify-self-end"
+                  aria-hidden="true"
+                >
+                  Смотреть
+                  <span class="transition-transform duration-200 group-hover:translate-x-1">→</span>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </Container>
+  </main>
+</BaseLayout>

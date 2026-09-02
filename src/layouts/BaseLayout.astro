@@ -1,0 +1,132 @@
+---
+/**
+ * src/layouts/BaseLayout.astro — базовый каркас всех страниц сайта.
+ *
+ * Что делает: формирует <head> (SEO-метаданные, Open Graph, hreflang, canonical,
+ * микроразметка Schema.org для события), задаёт язык документа, подключает
+ * глобальные стили и скрипт reveal-анимаций, добавляет skip-ссылку для
+ * клавиатурной навигации.
+ *
+ * Как работает: локаль определяется из URL (`src/i18n`), контент и мета-теги
+ * берутся из датафайлов (`src/data`). Тема оформления приходит пропсом `theme`
+ * и вешается классом на <body> — внутри этого класса переопределены токены
+ * дизайна, поэтому одна и та же разметка секций может выглядеть по-разному в
+ * разных визуальных вариантах. JS отдаётся одним небольшим инлайн-модулем:
+ * никакого фреймворка на клиенте нет.
+ *
+ * Связан с: `src/i18n/index.ts`, `src/data/index.ts`,
+ * `src/styles/global.css`, `src/scripts/reveal.ts`, все страницы `src/pages`.
+ */
+import '~/styles/global.css';
+
+import { getContent } from '~/data';
+import type { Locale } from '~/data/types';
+import { getAlternatePath, getHtmlLang, getLocaleFromUrl, localizePath } from '~/i18n';
+
+interface Props {
+  /** Заголовок страницы; если не задан — берётся из метаданных локали. */
+  title?: string;
+  /** Описание для <meta name="description">. */
+  description?: string;
+  /** Класс визуальной темы: theme-swiss | theme-navy | theme-sunlight | theme-kinetic. */
+  theme?: string;
+  /** Дополнительные классы на <body>. */
+  bodyClass?: string;
+  /** Скрыть страницу от индексации (используется для служебных прототипов). */
+  noindex?: boolean;
+  /** Встраивать микроразметку события: нужна только на главной. */
+  withEventSchema?: boolean;
+}
+
+const {
+  title,
+  description,
+  theme = 'theme-swiss',
+  bodyClass = '',
+  noindex = false,
+  withEventSchema = false,
+} = Astro.props;
+
+const locale: Locale = getLocaleFromUrl(Astro.url);
+const content = getContent(locale);
+
+const pageTitle = title ?? content.meta.title;
+const pageDescription = description ?? content.meta.description;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const alternateHref = new URL(
+  getAlternatePath(Astro.url, locale),
+  Astro.site ?? Astro.url.origin,
+).href;
+
+/** Микроразметка события — помогает поисковикам показать дату и место. */
+const eventSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Event',
+  name: content.hero.title,
+  description: content.meta.ogDescription,
+  startDate: content.event.startISO,
+  endDate: content.event.endISO,
+  eventAttendanceMode: 'https://schema.org/MixedEventAttendanceMode',
+  eventStatus: 'https://schema.org/EventScheduled',
+  inLanguage: content.event.languages,
+  location: [
+    {
+      '@type': 'Place',
+      name: content.event.city,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: content.event.city,
+        addressCountry: content.event.country,
+      },
+    },
+  ],
+  organizer: {
+    '@type': 'Organization',
+    name: locale === 'ru' ? 'Уральский федеральный университет' : 'Ural Federal University',
+    url: 'https://urfu.ru',
+  },
+};
+---
+
+<!doctype html>
+<html lang={getHtmlLang(locale)}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <meta name="keywords" content={content.meta.keywords.join(', ')} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang={locale === 'ru' ? 'en' : 'ru'} href={alternateHref} />
+    <link rel="alternate" hreflang="x-default" href={new URL(localizePath('/', 'ru'), Astro.site ?? Astro.url.origin).href} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={content.hero.title} />
+    <meta property="og:title" content={content.meta.ogTitle} />
+    <meta property="og:description" content={content.meta.ogDescription} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={locale === 'ru' ? 'ru_RU' : 'en_US'} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta name="theme-color" content="#0e0e0f" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    {
+      withEventSchema && (
+        <script type="application/ld+json" set:html={JSON.stringify(eventSchema)} is:inline />
+      )
+    }
+  </head>
+
+  <body class={`${theme} ${bodyClass}`.trim()}>
+    <a class="skip-link" href="#main">{content.ui.skipToContent}</a>
+    <slot />
+
+    <script>
+      import { initReveal } from '~/scripts/reveal';
+      initReveal();
+    </script>
+  </body>
+</html>

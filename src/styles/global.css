@@ -1,0 +1,241 @@
+/**
+ * src/styles/global.css — база стилей и дизайн-токены проекта.
+ *
+ * Что делает: подключает Tailwind CSS v4 и self-hosted шрифты, объявляет
+ * семантические токены (фон, текст, линии, акцент, типографика, тайминги) и
+ * задаёт базовый слой: сброс, фокус-стили, поведение скролла, уважение к
+ * prefers-reduced-motion и служебные классы разметки.
+ *
+ * Как работает: токены объявлены через @theme, поэтому Tailwind генерирует из
+ * них утилиты (bg-bg, text-ink, border-line, font-display и т. д.), а сами
+ * значения читаются через var() в момент применения. Благодаря этому любой
+ * контейнер может переопределить токен — на этом построены четыре визуальные
+ * темы в `src/styles/themes/*.css`.
+ *
+ * Связан с: `src/layouts/BaseLayout.astro` (единственное место импорта),
+ * `src/styles/themes/*.css` (переопределения токенов под варианты дизайна).
+ */
+
+@import 'tailwindcss';
+
+/* Self-hosted шрифты: подключаются локально, без запросов к Google Fonts. */
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/inter-tight/wght.css';
+@import '@fontsource-variable/unbounded/wght.css';
+@import '@fontsource-variable/onest/wght.css';
+
+@theme {
+  /* --- Поверхности --- */
+  --color-bg: #ffffff;
+  --color-bg-alt: #f4f4f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #eeeeec;
+
+  /* --- Текст --- */
+  --color-ink: #111112;
+  --color-ink-2: #55565b;
+  --color-ink-3: #8d8f96;
+  --color-ink-inverse: #ffffff;
+
+  /* --- Линии и границы --- */
+  --color-line: #e2e2df;
+  --color-line-strong: #111112;
+
+  /* --- Акцент --- */
+  --color-accent: #ff5a1f;
+  --color-accent-2: #1f3fff;
+  --color-on-accent: #ffffff;
+
+  /* --- Типографика --- */
+  --font-display: 'Inter Tight Variable', 'Inter Variable', system-ui, sans-serif;
+  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', monospace;
+
+  /* --- Радиусы: по умолчанию проект «квадратный», варианты переопределяют --- */
+  --radius-card: 0px;
+  --radius-control: 2px;
+  --radius-pill: 999px;
+
+  /* --- Тайминги и кривые анимаций --- */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+  --duration-fast: 180ms;
+  --duration-base: 320ms;
+  --duration-slow: 640ms;
+
+  /* --- Сетка --- */
+  --spacing-gutter: 1.25rem;
+  --container-page: 88rem;
+
+  /* --- Типографическая шкала для крупных заголовков --- */
+  --text-display: clamp(2.75rem, 7.5vw, 8rem);
+  --text-display--line-height: 0.92;
+  --text-display--letter-spacing: -0.03em;
+  --text-headline: clamp(1.85rem, 3.6vw, 3.25rem);
+  --text-headline--line-height: 1.05;
+  --text-headline--letter-spacing: -0.02em;
+  --text-title: clamp(1.25rem, 1.8vw, 1.75rem);
+  --text-title--line-height: 1.2;
+  --text-lead: clamp(1.0625rem, 1.35vw, 1.375rem);
+  --text-lead--line-height: 1.5;
+  --text-eyebrow: 0.8125rem;
+  --text-eyebrow--line-height: 1.2;
+  --text-eyebrow--letter-spacing: 0.16em;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    /* Отступ для sticky-шапки при переходе по anchor-ссылкам. */
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html:focus-within {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.6;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Перенос длинных русских терминов вместо горизонтального скролла. */
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  img,
+  svg,
+  video {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  /* Убираем анимации для пользователей, которые их отключили в системе. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Основной контейнер страницы с боковыми полями, растущими на больших экранах. */
+  .page-container {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 5rem);
+  }
+
+  /* Ссылка «перейти к содержанию» для клавиатурной навигации. */
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 100;
+    padding: 0.625rem 1rem;
+    background-color: var(--color-ink);
+    color: var(--color-ink-inverse);
+    font-size: 0.875rem;
+    transform: translateY(-200%);
+    transition: transform var(--duration-fast) var(--ease-out-quint);
+  }
+
+  .skip-link:focus-visible {
+    transform: translateY(0);
+  }
+
+  /* Надзаголовок секции: капитель с разрядкой. */
+  .eyebrow {
+    font-size: var(--text-eyebrow);
+    line-height: var(--text-eyebrow--line-height);
+    letter-spacing: var(--text-eyebrow--letter-spacing);
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+}
+
+@layer utilities {
+  /*
+   * Появление блока при попадании в вьюпорт.
+   * Начальное состояние задаётся здесь, класс `is-revealed` навешивает
+   * IntersectionObserver из `src/scripts/reveal.ts`.
+   */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(1.25rem);
+    transition:
+      opacity var(--duration-slow) var(--ease-out-quint),
+      transform var(--duration-slow) var(--ease-out-quint);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Если анимации отключены — показываем контент сразу, без ожидания observer. */
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal] {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Скрыто визуально, но доступно скринридерам. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

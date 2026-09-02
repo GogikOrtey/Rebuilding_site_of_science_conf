@@ -1,0 +1,69 @@
+/**
+ * src/styles/themes/swiss.css — тема «Swiss Editorial» (вариант дизайна 1).
+ *
+ * Что делает: переопределяет семантические токены из `global.css` под светлую
+ * издательскую подачу: бумажный фон, почти чёрный текст, тонкие линейки сетки,
+ * один оранжевый акцент, нулевые радиусы. Дополнительно даёт класс
+ * `.section-invert` — тёмную «якорную» секцию, которая ритмически разбивает
+ * страницу.
+ *
+ * Как работает: все значения — это те же кастомные свойства, что объявлены в
+ * @theme в `global.css`, поэтому переопределение на `.theme-swiss` через
+ * каскад автоматически меняет все Tailwind-утилиты внутри контейнера.
+ *
+ * Связан с: `src/styles/global.css` (объявление токенов),
+ * `src/layouts/BaseLayout.astro` (проп `theme`), страницы прототипа варианта 1.
+ */
+
+.theme-swiss {
+  --color-bg: #fbfbf9;
+  --color-bg-alt: #f1f0ec;
+  --color-surface: #ffffff;
+  --color-surface-2: #e8e7e1;
+
+  --color-ink: #0e0e0f;
+  --color-ink-2: #55565c;
+  --color-ink-3: #94959a;
+  --color-ink-inverse: #fbfbf9;
+
+  --color-line: #dcdbd5;
+  --color-line-strong: #0e0e0f;
+
+  --color-accent: #ff4a17;
+  --color-accent-2: #0e0e0f;
+  --color-on-accent: #ffffff;
+
+  --font-display: 'Inter Tight Variable', 'Inter Variable', system-ui, sans-serif;
+  --font-body: 'Inter Variable', system-ui, sans-serif;
+
+  --radius-card: 0px;
+  --radius-control: 0px;
+}
+
+/*
+ * Тёмная якорная секция. Переопределяет те же токены, что и тема, поэтому
+ * вложенные компоненты не требуют отдельных «dark»-вариантов классов.
+ */
+.theme-swiss .section-invert {
+  --color-bg: #0e0e0f;
+  --color-bg-alt: #17171a;
+  --color-surface: #17171a;
+  --color-surface-2: #202024;
+
+  --color-ink: #f6f6f3;
+  --color-ink-2: #a3a3a0;
+  --color-ink-3: #6e6e6c;
+  --color-ink-inverse: #0e0e0f;
+
+  --color-line: #2c2c30;
+  --color-line-strong: #f6f6f3;
+
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+}
+
+/* Тонкая вертикальная линейка сетки — основной декоративный приём темы. */
+.theme-swiss .rule-grid {
+  background-image: linear-gradient(to right, var(--color-line) 1px, transparent 1px);
+  background-size: calc(100% / 6) 100%;
+}

@@ -1,0 +1,103 @@
+/**
+ * src/styles/themes/kinetic.css — тема «Kinetic» (вариант 4, motion-first).
+ *
+ * Что делает: тёмная высококонтрастная тема под вариант с развитой моторикой:
+ * почти чёрная база, белый текст, кислотный лаймовый акцент и оранжевый как
+ * вторичный. Здесь же живут примитивы анимаций, которые переиспользуются
+ * GSAP-сценариями: маски строк для reveal, бегущая строка, магнитная кнопка.
+ *
+ * Как работает: токены переопределяются на `.theme-kinetic`. Анимации, которые
+ * можно сделать на чистом CSS (маркиза, подчёркивание ссылок, «дыхание» точек),
+ * описаны здесь, а сложная скролл-хореография — в
+ * `src/scripts/kinetic.ts` на GSAP + ScrollTrigger. Разделение нужно, чтобы
+ * страница выглядела осмысленно и без JavaScript.
+ *
+ * Связан с: `src/styles/global.css`, `src/layouts/BaseLayout.astro`,
+ * `src/scripts/kinetic.ts`, страницы прототипа варианта 4.
+ */
+
+.theme-kinetic {
+  --color-bg: #08080a;
+  --color-bg-alt: #101013;
+  --color-surface: #131317;
+  --color-surface-2: #1b1b20;
+
+  --color-ink: #f7f7f4;
+  --color-ink-2: #9d9da2;
+  --color-ink-3: #63636a;
+  --color-ink-inverse: #08080a;
+
+  --color-line: #26262b;
+  --color-line-strong: #f7f7f4;
+
+  --color-accent: #d4ff3f;
+  --color-accent-2: #ff4a17;
+  --color-on-accent: #08080a;
+
+  --font-display: 'Inter Tight Variable', system-ui, sans-serif;
+  --font-body: 'Inter Variable', system-ui, sans-serif;
+
+  --radius-card: 0px;
+  --radius-control: 999px;
+
+  /* Плотный набор: заголовки в этой теме работают как графический объект. */
+  --text-display--letter-spacing: -0.045em;
+  --text-display--line-height: 0.86;
+}
+
+/*
+ * Маска строки для построчного reveal: контейнер обрезает, внутренний
+ * элемент выезжает снизу. Используется и CSS-анимацией, и GSAP.
+ */
+.theme-kinetic .line-mask {
+  display: block;
+  overflow: hidden;
+}
+
+.theme-kinetic .line-mask > * {
+  display: block;
+  will-change: transform;
+}
+
+/* Бегущая строка: две копии контента едут непрерывно. */
+@keyframes kinetic-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.theme-kinetic .marquee-track {
+  display: flex;
+  width: max-content;
+  animation: kinetic-marquee var(--marquee-duration, 30s) linear infinite;
+}
+
+.theme-kinetic .marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Подчёркивание, растущее из левого края — базовое hover-состояние ссылок. */
+.theme-kinetic .link-underline {
+  position: relative;
+}
+
+.theme-kinetic .link-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -0.15em;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration-base) var(--ease-out-quint);
+}
+
+.theme-kinetic .link-underline:hover::after,
+.theme-kinetic .link-underline:focus-visible::after {
+  transform: scaleX(1);
+}

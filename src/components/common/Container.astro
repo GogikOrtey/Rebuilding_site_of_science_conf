@@ -1,0 +1,32 @@
+---
+/**
+ * src/components/common/Container.astro — контейнер контента с боковыми полями.
+ *
+ * Что делает: центрирует содержимое, ограничивает максимальную ширину и задаёт
+ * адаптивные боковые отступы, чтобы во всех секциях сайта была одна и та же
+ * левая граница текста.
+ *
+ * Как работает: ширина и поля берутся из токенов `--container-page` и
+ * clamp-паддинга класса `.page-container` в `global.css`. Проп `size`
+ * переключает узкий вариант для читаемых текстовых блоков (условия участия,
+ * форма) — там длина строки важнее использования всей ширины экрана.
+ *
+ * Связан с: `src/styles/global.css` (класс `.page-container`), все секции.
+ */
+interface Props {
+  /** wide — полная сетка страницы, narrow — колонка под длинный текст. */
+  size?: 'wide' | 'narrow';
+  /** HTML-тег контейнера: section, div, header, footer и т. д. */
+  as?: string;
+  class?: string;
+  id?: string;
+}
+
+const { size = 'wide', as: Tag = 'div', class: className = '', id } = Astro.props;
+
+const sizeClass = size === 'narrow' ? 'max-w-[68ch]' : '';
+---
+
+<Tag id={id} class:list={['page-container', sizeClass, className]}>
+  <slot />
+</Tag>

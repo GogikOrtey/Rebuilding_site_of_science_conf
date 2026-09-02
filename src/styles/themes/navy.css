@@ -1,0 +1,92 @@
+/**
+ * src/styles/themes/navy.css — тема «Deep Blue Institutional» (вариант 2).
+ *
+ * Что делает: тёмная тема на глубоком синем с двумя акцентами — тёплым золотым
+ * и холодным бирюзовым. Дополнительно описывает декоративные приёмы варианта:
+ * фоновую сетку-координатную плоскость, светящиеся узлы социального графа и
+ * угловые маркеры блоков.
+ *
+ * Как работает: переопределяет токены из @theme в `global.css` на классе
+ * `.theme-navy`. Декор реализован CSS-паттернами и не требует изображений;
+ * анимированный граф связей рисует островок `SocialGraph.astro`, ему нужны
+ * только цветовые токены отсюда.
+ *
+ * Связан с: `src/styles/global.css`, `src/layouts/BaseLayout.astro`,
+ * `src/components/decor/SocialGraph.astro`, страницы прототипа варианта 2.
+ */
+
+.theme-navy {
+  --color-bg: #070d20;
+  --color-bg-alt: #0b1531;
+  --color-surface: #0f1c40;
+  --color-surface-2: #142451;
+
+  --color-ink: #eef2ff;
+  --color-ink-2: #a7b5dd;
+  --color-ink-3: #6b7aa6;
+  --color-ink-inverse: #070d20;
+
+  --color-line: #1e2f5e;
+  --color-line-strong: #3d5591;
+
+  /* Золото — основной акцент, бирюза — вторичный для связей и данных. */
+  --color-accent: #f5c451;
+  --color-accent-2: #3fdfc0;
+  --color-on-accent: #070d20;
+
+  --font-display: 'Unbounded Variable', 'Inter Tight Variable', system-ui, sans-serif;
+  --font-body: 'Inter Variable', system-ui, sans-serif;
+
+  --radius-card: 2px;
+  --radius-control: 2px;
+
+  /* Unbounded — широкий шрифт, ему нужен менее плотный трекинг заголовков. */
+  --text-display--letter-spacing: -0.02em;
+  --text-headline--letter-spacing: -0.01em;
+}
+
+/* Координатная сетка на фоне: намёк на измеримость социального капитала. */
+.theme-navy .decor-grid {
+  background-image:
+    linear-gradient(to right, var(--color-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-line) 1px, transparent 1px);
+  background-size: 5rem 5rem;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* Угловые маркеры блока — вместо рамки по всему периметру. */
+.theme-navy .decor-corners {
+  position: relative;
+}
+
+.theme-navy .decor-corners::before,
+.theme-navy .decor-corners::after {
+  content: '';
+  position: absolute;
+  width: 0.875rem;
+  height: 0.875rem;
+  border-color: var(--color-accent);
+  border-style: solid;
+  pointer-events: none;
+}
+
+.theme-navy .decor-corners::before {
+  top: 0;
+  left: 0;
+  border-width: 1px 0 0 1px;
+}
+
+.theme-navy .decor-corners::after {
+  right: 0;
+  bottom: 0;
+  border-width: 0 1px 1px 0;
+}
+
+/* Светящаяся точка-узел: используется как буллет и маркер активной секции. */
+.theme-navy .decor-node {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background-color: var(--color-accent-2);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-accent-2) 18%, transparent);
+}

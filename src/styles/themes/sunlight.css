@@ -1,0 +1,88 @@
+/**
+ * src/styles/themes/sunlight.css — тема «Soft Sunlight» (вариант 3).
+ *
+ * Что делает: светлая тёплая тема — бумажно-песочный фон, мягкий янтарный
+ * акцент, спокойный синий как вторичный цвет, крупные скругления. Описывает
+ * фирменные приёмы варианта: мягкие солнечные лучи на фоне и «подушку» под
+ * парящими 3D-объектами.
+ *
+ * Как работает: переопределяет токены из @theme в `global.css` на классе
+ * `.theme-sunlight`. Лучи — это не декоративный градиент «для красоты», а
+ * источник света, согласованный с направлением света в 3D-сцене: и CSS-лучи,
+ * и Three.js-сцена подсвечены сверху-слева, поэтому картинка читается цельно.
+ *
+ * Связан с: `src/styles/global.css`, `src/layouts/BaseLayout.astro`,
+ * `src/components/decor/FloatingScene.astro` (Three.js-островок),
+ * страницы прототипа варианта 3.
+ */
+
+.theme-sunlight {
+  --color-bg: #fffaf2;
+  --color-bg-alt: #fdf1e1;
+  --color-surface: #ffffff;
+  --color-surface-2: #fbeedc;
+
+  --color-ink: #2a2016;
+  --color-ink-2: #6c5c4c;
+  --color-ink-3: #a3907c;
+  --color-ink-inverse: #fffaf2;
+
+  --color-line: #efe0cc;
+  --color-line-strong: #d8bf9f;
+
+  --color-accent: #e8863c;
+  --color-accent-2: #4a8fd8;
+  --color-on-accent: #ffffff;
+
+  --font-display: 'Onest Variable', 'Inter Variable', system-ui, sans-serif;
+  --font-body: 'Inter Variable', system-ui, sans-serif;
+
+  --radius-card: 1.5rem;
+  --radius-control: 999px;
+
+  /* Onest мягче и шире Inter Tight — трекинг заголовков ослаблен. */
+  --text-display--letter-spacing: -0.02em;
+  --text-display--line-height: 0.98;
+}
+
+/*
+ * Солнечные лучи: два мягких световых конуса из верхнего левого угла.
+ * Свет идёт с той же стороны, что и directional light в 3D-сцене.
+ */
+.theme-sunlight .decor-sunrays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      60rem 40rem at 12% -10%,
+      color-mix(in oklab, var(--color-accent) 22%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40rem 34rem at 78% 8%,
+      color-mix(in oklab, var(--color-accent-2) 12%, transparent),
+      transparent 72%
+    );
+}
+
+/* Мягкая тень-подушка под парящим объектом: без неё объект «висит в пустоте». */
+.theme-sunlight .decor-float-shadow {
+  filter: blur(1.75rem);
+  background-color: color-mix(in oklab, var(--color-ink) 14%, transparent);
+}
+
+/* Плавное покачивание — базовая анимация парящих элементов. */
+@keyframes sunlight-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-0.75rem) rotate(1.5deg);
+  }
+}
+
+.theme-sunlight .decor-float {
+  animation: sunlight-float 7s ease-in-out infinite;
+}
