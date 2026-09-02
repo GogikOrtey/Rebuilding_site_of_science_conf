@@ -1,0 +1,61 @@
+---
+/**
+ * src/components/decor/FloatingScene.astro — обёртка Three.js-сцены Soft Sunlight.
+ *
+ * Что делает: рисует парящие low-poly объекты с мягкими гранями поверх
+ * прозрачного canvas и кладёт под ними CSS-«подушки» `.decor-float-shadow`,
+ * чтобы объекты не висели в пустоте. Сама логика сцены живёт в модуле
+ * `floating-scene.ts` и подключается только на страницах с этим компонентом.
+ *
+ * Как работает: canvas получает aria-hidden; при отсутствии WebGL модуль
+ * скрывает корень. Тени-подушки позиционированы под ключевыми зонами
+ * композиции и слегка покачиваются классом `.decor-float`.
+ *
+ * Статус: служебный декор прототипа варианта 3.
+ *
+ * Связан с: `src/scripts/floating-scene.ts`, `src/styles/themes/sunlight.css`,
+ * `src/pages/proto/3.astro`.
+ */
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+---
+
+<div
+  class:list={['floating-scene relative isolate', className]}
+  data-floating-scene
+  aria-hidden="true"
+>
+  <canvas
+    data-floating-canvas
+    class="floating-scene__canvas absolute inset-0 size-full"
+    aria-hidden="true"
+  ></canvas>
+
+  <!-- Мягкие тени-подушки под зонами парения объектов -->
+  <div class="pointer-events-none absolute inset-x-[8%] bottom-[6%] top-auto flex items-end justify-between gap-4">
+    <span class="decor-float-shadow decor-float h-6 w-20 rounded-pill opacity-70" style="animation-delay: -1.2s"></span>
+    <span class="decor-float-shadow decor-float h-7 w-28 rounded-pill opacity-80" style="animation-delay: -2.4s"></span>
+    <span class="decor-float-shadow decor-float h-5 w-16 rounded-pill opacity-60" style="animation-delay: -0.6s"></span>
+    <span class="decor-float-shadow decor-float hidden h-6 w-24 rounded-pill opacity-65 sm:block" style="animation-delay: -3.1s"></span>
+  </div>
+</div>
+
+<script>
+  import { initFloatingScene } from '~/scripts/floating-scene';
+
+  /** Запускает сцену во всех экземплярах компонента и регистрирует dispose. */
+  function bootFloatingScenes(): void {
+    const roots = document.querySelectorAll<HTMLElement>('[data-floating-scene]');
+    roots.forEach((root) => {
+      if (root.dataset.floatingReady === '1') return;
+      root.dataset.floatingReady = '1';
+      const dispose = initFloatingScene(root);
+      window.addEventListener('pagehide', dispose, { once: true });
+    });
+  }
+
+  bootFloatingScenes();
+</script>

@@ -1,0 +1,646 @@
+---
+/**
+ * src/pages/proto/4.astro — прототип визуального направления «Kinetic».
+ *
+ * Что делает: показывает hero и ключевые секции сайта конференции в
+ * motion-first подаче: почти чёрная база, кислотный лайм, крупная
+ * кинетическая типографика и развитая скролл-хореография — вступительный
+ * загрузчик, плавный скролл с параллаксом, бегущая лента, горизонтальная
+ * пин-секция тем, прорисовка таймлайна, пиксельное проявление портретов,
+ * магнитные кнопки и салют частиц по клику на CTA.
+ *
+ * Как работает: текст берётся из датафайлов (`src/data`), оформление — из
+ * токенов темы `theme-kinetic`. Анимация подключена декларативно: разметка
+ * помечена data-атрибутами (`data-anim`, `data-hero-line`, `data-marquee`,
+ * `data-horizontal`, `data-pixel-reveal`, `data-magnetic`, `data-burst`), а вся
+ * логика живёт в `src/scripts/kinetic.ts` на GSAP.
+ *
+ * Два узла, которые важно не сломать при правках:
+ * 1) обёртка `#smooth-wrapper > #smooth-content` нужна ScrollSmoother, а все
+ *    фиксированные слои (загрузчик, зерно, прогресс, курсор, шапка) обязаны
+ *    лежать вне неё, иначе плавный скролл их «увезёт»;
+ * 2) инлайн-скрипт ставит на <html> класс `js-kinetic` до первой отрисовки —
+ *    только под ним стили прячут анимируемые блоки, поэтому при отключённом
+ *    или упавшем JS страница остаётся полностью читаемой.
+ *
+ * Статус: служебный прототип для выбора направления, помечен noindex. После
+ * выбора направления секции выносятся в переиспользуемые компоненты.
+ *
+ * Связан с: `src/layouts/BaseLayout.astro`, `src/styles/themes/kinetic.css`,
+ * `src/scripts/kinetic.ts`, `src/components/decor/KineticGrid.astro`,
+ * `src/data/*`, `src/components/common/Container.astro`.
+ */
+import { Image } from 'astro:assets';
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Container from '~/components/common/Container.astro';
+import KineticGrid from '~/components/decor/KineticGrid.astro';
+import { getContent } from '~/data';
+import { getPortrait } from '~/data/people';
+import '~/styles/themes/kinetic.css';
+
+const c = getContent('ru');
+
+/** Спецификация события под hero: короткие пары «подпись — значение». */
+const heroSpecs = [
+  { label: 'Даты', value: c.event.dateLabel },
+  { label: 'Место', value: c.event.city },
+  { label: 'Формат', value: c.event.format },
+  { label: 'Языки', value: c.event.languages.join(' / ') },
+];
+
+/**
+ * Цифры для счётчиков: считаются из контента, а не проставлены руками,
+ * чтобы не разъезжались при правках данных.
+ */
+const stats = [
+  { value: c.contacts.length, label: 'страны-участницы' },
+  { value: c.topics.items.length, label: 'направления' },
+  { value: c.program.items.length, label: 'форматов работы' },
+  { value: 2, label: 'дня программы' },
+];
+
+/** Лента бегущей строки: дублируется в разметке, чтобы шла без разрыва. */
+const marqueeWords = [
+  'Социальный капитал',
+  'Доверие',
+  'Репутация',
+  'Связи',
+  'Сообщество',
+  'Партнёрство',
+];
+
+const shownSpeakers = c.speakers.filter((s) => !s.pending).slice(0, 6);
+const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
+---
+
+<BaseLayout title={`${c.hero.title} — вариант 4, Kinetic`} theme="theme-kinetic" noindex>
+  <!--
+    Класс js-kinetic ставится до отрисовки контента: он включает стили
+    начальных состояний анимаций. Без JS класс не появится и всё видно сразу.
+  -->
+  <script is:inline>
+    document.documentElement.classList.add('js-kinetic');
+  </script>
+
+  <!-- ФИКСИРОВАННЫЕ СЛОИ: вне обёртки плавного скролла -->
+  <div class="loader" data-loader>
+    <div class="text-center" data-loader-inner>
+      <p class="eyebrow text-accent">Загрузка</p>
+      <p class="mt-4 font-display text-[clamp(4rem,14vw,10rem)] leading-none font-semibold" data-loader-count>
+        000
+      </p>
+      <div class="mx-auto mt-6 h-px w-40 bg-line">
+        <div class="h-full origin-left scale-x-0 bg-accent" data-loader-bar></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grain" aria-hidden="true"></div>
+  <div class="scroll-progress" data-scroll-progress aria-hidden="true"></div>
+  <div class="cursor-ring" data-cursor-ring aria-hidden="true"></div>
+  <div class="cursor-dot" data-cursor-dot aria-hidden="true"></div>
+
+  <!-- ШАПКА: прозрачная над hero, застекляется при скролле, уезжает вниз по движению -->
+  <header class="site-header fixed inset-x-0 top-0 z-60" data-header>
+    <Container class="flex h-20 items-center justify-between gap-6">
+      <a href="/proto/4" class="flex items-center gap-3" aria-label={c.hero.title} data-cursor="grow">
+        <span class="relative flex size-2.5">
+          <span class="absolute inset-0 animate-ping rounded-pill bg-accent opacity-60"></span>
+          <span class="relative size-2.5 rounded-pill bg-accent"></span>
+        </span>
+        <span class="font-display text-sm font-semibold tracking-tight uppercase">
+          Соц. капитал<span class="text-ink-3">/26</span>
+        </span>
+      </a>
+
+      <nav class="hidden items-center gap-8 lg:flex" aria-label="Основная навигация">
+        {
+          c.nav.map((item) => (
+            <a
+              href={item.href}
+              class="link-underline text-sm text-ink-2 transition-colors duration-200 hover:text-ink"
+              data-cursor="grow"
+            >
+              {item.label}
+            </a>
+          ))
+        }
+      </nav>
+
+      <div class="flex items-center gap-5">
+        <a href="/en" class="text-sm text-ink-3 transition-colors hover:text-ink">EN</a>
+        <a
+          href="#registration"
+          class="magnetic rounded-control bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent"
+          data-magnetic="0.2"
+          data-cursor="grow"
+        >
+          Регистрация
+        </a>
+      </div>
+    </Container>
+  </header>
+
+  <div id="smooth-wrapper">
+    <div id="smooth-content">
+      <main id="main">
+        <!-- HERO: кинетический заголовок на интерактивной сетке -->
+        <section class="relative flex min-h-dvh flex-col justify-end overflow-hidden pt-32 pb-12">
+          <div class="absolute inset-0" data-speed="0.85" aria-hidden="true">
+            <KineticGrid />
+          </div>
+          <!-- Лаймовое свечение за заголовком: единственный цветной блик в hero -->
+          <div
+            class="pointer-events-none absolute -top-40 left-1/4 size-[45rem] rounded-pill opacity-[0.07] blur-[120px]"
+            style="background: var(--color-accent)"
+            data-speed="1.15"
+            aria-hidden="true"
+          >
+          </div>
+
+          <Container class="relative">
+            <p class="eyebrow text-accent" data-hero-eyebrow>{c.hero.eyebrow}</p>
+
+            <h1 class="mt-8 font-display text-display font-semibold">
+              {
+                c.hero.titleLines.map((line, i) => (
+                  <span class="line-mask" data-hero-line>
+                    <span
+                      class={
+                        i === c.hero.titleLines.length - 1 ? 'text-outline text-outline-accent' : ''
+                      }
+                    >
+                      {line}
+                    </span>
+                  </span>
+                ))
+              }
+            </h1>
+
+            <div class="mt-14 grid gap-x-12 gap-y-10 lg:grid-cols-12 lg:items-end">
+              <p class="text-lead text-ink-2 lg:col-span-6" data-hero-lead>{c.hero.lead}</p>
+
+              <div class="flex flex-wrap items-center gap-4 lg:col-span-6 lg:justify-end">
+                <a
+                  href={c.hero.primaryCta.href}
+                  class="magnetic rounded-control bg-accent px-7 py-4 font-semibold text-on-accent"
+                  data-hero-tail
+                  data-magnetic="0.3"
+                  data-burst
+                  data-cursor="grow"
+                >
+                  {c.hero.primaryCta.label}
+                  <span aria-hidden="true">→</span>
+                </a>
+                <a
+                  href={c.hero.secondaryCta.href}
+                  class="magnetic rounded-control border border-line-strong px-7 py-4 font-semibold"
+                  data-hero-tail
+                  data-magnetic="0.3"
+                  data-cursor="grow"
+                >
+                  {c.hero.secondaryCta.label}
+                </a>
+              </div>
+            </div>
+
+            <dl class="mt-16 grid grid-cols-2 gap-px border-t border-line pt-8 lg:grid-cols-4">
+              {
+                heroSpecs.map((spec) => (
+                  <div data-hero-tail>
+                    <dt class="font-mono text-xs tracking-wider text-ink-3 uppercase">{spec.label}</dt>
+                    <dd class="mt-2 font-display text-title font-medium">{spec.value}</dd>
+                  </div>
+                ))
+              }
+            </dl>
+          </Container>
+        </section>
+
+        <!-- ЛЕНТА: скорость и направление подхватывают скролл -->
+        <section class="overflow-hidden border-y border-line py-6" aria-hidden="true">
+          <div class="marquee-track" data-marquee data-marquee-duration="24">
+            {
+              [0, 1].map(() => (
+                <div class="flex shrink-0 items-center">
+                  {marqueeWords.map((word) => (
+                    <span class="flex items-center">
+                      <span class="px-8 font-display text-[clamp(1.75rem,4vw,3.5rem)] font-semibold whitespace-nowrap">
+                        {word}
+                      </span>
+                      <span class="size-2 shrink-0 rounded-pill bg-accent"></span>
+                    </span>
+                  ))}
+                </div>
+              ))
+            }
+          </div>
+        </section>
+
+        <!-- ЧТО ДАЁТ УЧАСТИЕ: счётчики и шесть фактов -->
+        <section id="about" class="relative border-b border-line py-24 lg:py-32">
+          <Container>
+            <div class="grid gap-x-12 gap-y-8 lg:grid-cols-12">
+              <h2 class="font-display text-headline font-semibold lg:col-span-7" data-anim="heading">
+                {c.sectionTitles.keyFacts}
+              </h2>
+              <p class="text-ink-2 lg:col-span-5 lg:justify-self-end lg:text-right" data-anim="rise">
+                {c.event.formatNote}
+              </p>
+            </div>
+
+            <dl class="mt-20 grid grid-cols-2 gap-y-12 lg:grid-cols-4">
+              {
+                stats.map((stat) => (
+                  <div data-anim="rise">
+                    <dd class="font-display text-[clamp(3rem,7vw,6rem)] leading-none font-semibold text-accent">
+                      <span data-count-to={stat.value}>0</span>
+                    </dd>
+                    <dt class="mt-3 font-mono text-xs tracking-wider text-ink-3 uppercase">
+                      {stat.label}
+                    </dt>
+                  </div>
+                ))
+              }
+            </dl>
+
+            <ul class="mt-24 grid gap-px bg-line md:grid-cols-2 lg:grid-cols-3">
+              {
+                c.keyFacts.map((fact, i) => (
+                  <li class="group relative bg-bg p-8 lg:p-10" data-anim="rise" data-cursor="grow">
+                    <span class="font-mono text-xs text-ink-3">{String(i + 1).padStart(2, '0')}</span>
+                    <h3 class="mt-6 font-display text-title font-semibold transition-colors duration-300 group-hover:text-accent">
+                      {fact.title}
+                    </h3>
+                    <p class="mt-4 text-ink-2">{fact.body}</p>
+                    {fact.link && (
+                      <a
+                        href={fact.link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="link-underline mt-6 inline-flex items-center gap-2 text-sm font-semibold text-accent"
+                      >
+                        {fact.link.label}
+                        <span aria-hidden="true">↗</span>
+                      </a>
+                    )}
+                    <!-- Лаймовая полоса, растущая снизу на hover -->
+                    <span
+                      class="absolute bottom-0 left-0 h-0.5 w-full origin-left scale-x-0 bg-accent transition-transform duration-500 ease-out group-hover:scale-x-100"
+                      aria-hidden="true"></span>
+                  </li>
+                ))
+              }
+            </ul>
+          </Container>
+        </section>
+
+        <!-- ТЕМЫ: секция пинится, панели едут горизонтально по вертикальному скроллу -->
+        <section
+          id="topics"
+          class="relative overflow-hidden border-b border-line py-24 lg:py-0"
+          data-horizontal
+        >
+          <div class="lg:flex lg:h-dvh lg:items-center">
+            <div class="flex flex-col gap-12 lg:flex-row lg:items-center lg:gap-0" data-horizontal-track>
+              <div class="w-full shrink-0 lg:w-[42vw] lg:pr-16">
+                <Container>
+                  <span class="font-mono text-xs tracking-wider text-ink-3 uppercase">
+                    {c.topics.items.length} направления
+                  </span>
+                  <h2 class="mt-6 font-display text-headline font-semibold" data-anim="heading">
+                    {c.sectionTitles.topics}
+                  </h2>
+                  <p class="mt-6 max-w-md text-ink-2" data-anim="rise">{c.topics.note}</p>
+                  <p class="mt-10 hidden items-center gap-3 font-mono text-xs text-ink-3 uppercase lg:flex">
+                    Листайте вниз
+                    <span class="h-px w-16 bg-line"></span>
+                    <span aria-hidden="true">→</span>
+                  </p>
+                </Container>
+              </div>
+
+              <ol class="flex shrink-0 flex-col gap-px bg-line lg:flex-row lg:bg-transparent lg:gap-8">
+                {
+                  c.topics.items.map((topic) => (
+                    <li
+                      class="group flex w-full shrink-0 flex-col justify-between gap-10 bg-bg p-8 transition-colors duration-500 hover:bg-bg-alt lg:h-[32rem] lg:w-[25rem] lg:border lg:border-line lg:p-10"
+                      data-cursor="grow"
+                    >
+                      <span class="ghost-number text-[clamp(4rem,9vw,7.5rem)]">{topic.index}</span>
+                      <h3
+                        class="font-display text-title font-medium transition-colors duration-300 group-hover:text-accent"
+                        data-scramble
+                      >
+                        {topic.title}
+                      </h3>
+                    </li>
+                  ))
+                }
+              </ol>
+            </div>
+          </div>
+
+          <!--
+            Индикатор прогресса ленты. Лежит в закреплённой секции, но вне
+            движущейся дорожки, поэтому во время пина остаётся на месте.
+          -->
+          <div class="absolute inset-x-0 bottom-14 hidden lg:block" aria-hidden="true">
+            <Container class="flex items-center gap-6">
+              <span class="font-mono text-xs text-ink-3">
+                <span data-horizontal-counter>01</span> / {String(c.topics.items.length).padStart(2, '0')}
+              </span>
+              <span class="h-px flex-1 bg-line">
+                <span
+                  class="block h-px origin-left scale-x-0 bg-accent"
+                  data-horizontal-progress></span>
+              </span>
+            </Container>
+          </div>
+        </section>
+
+        <!-- КЛЮЧЕВЫЕ ДАТЫ: вертикальная линия прорисовывается по скроллу -->
+        <section class="relative border-b border-line py-24 lg:py-32" data-timeline>
+          <Container>
+            <h2 class="font-display text-headline font-semibold" data-anim="heading">
+              {c.sectionTitles.deadlines}
+            </h2>
+
+            <div class="relative mt-20 pl-10 sm:pl-16">
+              <!-- Линия таймлайна: путь рисует DrawSVG, поэтому это svg, а не border -->
+              <svg
+                class="absolute top-2 left-1 h-full w-0.5 overflow-visible"
+                viewBox="0 0 2 1000"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <line x1="1" y1="0" x2="1" y2="1000" stroke="var(--color-line)" stroke-width="2"></line>
+                <line
+                  x1="1"
+                  y1="0"
+                  x2="1"
+                  y2="1000"
+                  stroke="var(--color-accent)"
+                  stroke-width="2"
+                  data-timeline-line></line>
+              </svg>
+
+              <ol class="space-y-16">
+                {
+                  c.deadlines.map((d) => (
+                    <li class="relative" data-timeline-item>
+                      <span
+                        class:list={[
+                          'absolute -left-10 top-2 size-2.5 rounded-pill sm:-left-16',
+                          d.highlight ? 'bg-accent' : 'bg-ink-3',
+                        ]}
+                        aria-hidden="true"></span>
+                      <time datetime={d.dateISO} class="font-mono text-sm text-ink-3">
+                        {d.dateLabel}
+                      </time>
+                      <h3
+                        class:list={[
+                          'mt-3 font-display text-title font-semibold',
+                          d.highlight && 'text-accent',
+                        ]}
+                      >
+                        {d.title}
+                      </h3>
+                      {d.note && <p class="mt-2 max-w-xl text-ink-2">{d.note}</p>}
+                    </li>
+                  ))
+                }
+              </ol>
+            </div>
+          </Container>
+        </section>
+
+        <!-- СПИКЕРЫ: портреты проявляются сеткой плиток -->
+        <section id="speakers" class="border-b border-line py-24 lg:py-32">
+          <Container>
+            <div class="flex flex-wrap items-baseline justify-between gap-6">
+              <h2 class="font-display text-headline font-semibold" data-anim="heading">
+                {c.sectionTitles.speakers}
+              </h2>
+              {
+                pendingSpeakers > 0 && (
+                  <p class="font-mono text-xs tracking-wider text-ink-3 uppercase" data-anim="rise">
+                    + {pendingSpeakers} на согласовании
+                  </p>
+                )
+              }
+            </div>
+
+            <ul class="mt-16 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+              {
+                shownSpeakers.map((person) => {
+                  const portrait = getPortrait(person.photoKey);
+                  return (
+                    <li class="group" data-anim="rise" data-cursor="grow">
+                      {portrait && (
+                        <div class="relative overflow-hidden bg-surface" data-pixel-reveal>
+                          <Image
+                            src={portrait}
+                            alt={person.name}
+                            width={520}
+                            height={620}
+                            widths={[320, 520, 780]}
+                            sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
+                            class="aspect-[4/5] w-full object-cover contrast-[1.05] grayscale transition-all duration-700 ease-out group-hover:scale-105 group-hover:grayscale-0"
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
+                      <h3 class="mt-6 font-display text-title font-semibold" data-weight-hover>
+                        {person.name}
+                      </h3>
+                      <p class="mt-3 text-sm text-ink-2">{person.role}</p>
+                      <p class="mt-3 font-mono text-xs tracking-wider text-ink-3 uppercase">
+                        {person.country}
+                      </p>
+                    </li>
+                  );
+                })
+              }
+            </ul>
+          </Container>
+        </section>
+
+        <!-- ВРЕМЯ И ЯЗЫКИ: цифры «набираются» при появлении строки -->
+        <section class="border-b border-line py-24 lg:py-32">
+          <Container>
+            <div class="grid gap-x-12 gap-y-8 lg:grid-cols-12">
+              <h2 class="font-display text-headline font-semibold lg:col-span-6" data-anim="heading">
+                {c.sectionTitles.schedule}
+              </h2>
+              <p class="text-ink-2 lg:col-span-5 lg:col-start-8" data-anim="rise">{c.schedule.note}</p>
+            </div>
+
+            <div class="mt-16">
+              <table class="hidden w-full border-collapse text-left sm:table">
+                <thead>
+                  <tr class="border-b border-line-strong">
+                    <th class="py-4 font-mono text-xs font-medium tracking-wider text-ink-3 uppercase">
+                      {c.schedule.columns.city}
+                    </th>
+                    <th class="py-4 font-mono text-xs font-medium tracking-wider text-ink-3 uppercase">
+                      UTC
+                    </th>
+                    <th class="py-4 font-mono text-xs font-medium tracking-wider text-ink-3 uppercase">
+                      {c.schedule.columns.start}
+                    </th>
+                    <th class="py-4 font-mono text-xs font-medium tracking-wider text-ink-3 uppercase">
+                      {c.schedule.columns.end}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {
+                    c.schedule.rows.map((row) => (
+                      <tr class="border-b border-line transition-colors duration-300 hover:bg-bg-alt">
+                        <td
+                          class:list={[
+                            'py-5 font-display text-title font-medium',
+                            row.primary && 'text-accent',
+                          ]}
+                        >
+                          {row.city}
+                        </td>
+                        <td class="py-5 font-mono text-sm text-ink-3">{row.utc}</td>
+                        <td class="py-5 font-mono" data-time-scramble>
+                          {row.start}
+                        </td>
+                        <td class="py-5 font-mono" data-time-scramble>
+                          {row.end}
+                        </td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </table>
+
+              <ul class="sm:hidden">
+                {
+                  c.schedule.rows.map((row) => (
+                    <li class="flex items-baseline justify-between gap-4 border-b border-line py-4">
+                      <div>
+                        <p class:list={['font-display font-medium', row.primary && 'text-accent']}>
+                          {row.city}
+                        </p>
+                        <p class="font-mono text-xs text-ink-3">{row.utc}</p>
+                      </div>
+                      <p class="font-mono">
+                        {row.start} — {row.end}
+                      </p>
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+
+            <p class="mt-8 text-sm text-ink-3" data-anim="rise">
+              {c.schedule.languagesLabel}: <span class="text-ink">{c.event.languages.join(', ')}</span>
+            </p>
+          </Container>
+        </section>
+
+        <!-- ФИНАЛЬНЫЙ CTA: крупная типографика и кнопка с салютом по клику -->
+        <section id="registration" class="relative overflow-hidden py-28 lg:py-40">
+          <div
+            class="pointer-events-none absolute -bottom-60 left-1/2 size-[50rem] -translate-x-1/2 rounded-pill opacity-[0.09] blur-[130px]"
+            style="background: var(--color-accent)"
+            data-speed="1.2"
+            aria-hidden="true"
+          >
+          </div>
+
+          <Container class="relative text-center">
+            <p class="eyebrow text-accent" data-anim="rise">{c.sectionTitles.registration}</p>
+            <h2
+              class="mx-auto mt-8 max-w-4xl font-display text-display font-semibold"
+              data-anim="heading"
+            >
+              Приезжайте разбираться вместе
+            </h2>
+            <p class="mx-auto mt-8 max-w-xl text-lead text-ink-2" data-anim="rise">
+              {c.registration.lead}
+            </p>
+
+            <div class="mt-14 flex justify-center" data-anim="rise">
+              <a
+                href="#registration"
+                class="magnetic rounded-control bg-accent px-10 py-5 text-lg font-semibold text-on-accent"
+                data-magnetic="0.35"
+                data-burst
+                data-cursor="grow"
+              >
+                {c.registration.title}
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </Container>
+        </section>
+
+        <!-- ПОДВАЛ -->
+        <footer id="contacts" class="border-t border-line">
+          <Container class="grid gap-x-12 gap-y-12 py-16 lg:grid-cols-12">
+            <div class="lg:col-span-5">
+              <p class="max-w-sm text-sm text-ink-2">{c.footer.note}</p>
+              <p class="mt-4 text-xs text-ink-3">{c.footer.imagesNote}</p>
+            </div>
+
+            <div class="lg:col-span-4">
+              <h3 class="eyebrow text-ink-3">{c.sectionTitles.contacts}</h3>
+              <ul class="mt-5 space-y-4 text-sm">
+                {
+                  c.contacts[0]?.people.map((p) => (
+                    <li>
+                      <span class="block font-medium">{p.name}</span>
+                      {p.email && (
+                        <a href={`mailto:${p.email}`} class="link-underline text-ink-2">
+                          {p.email}
+                        </a>
+                      )}
+                      {p.phone && <span class="block text-ink-2">{p.phone}</span>}
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+
+            <nav class="lg:col-span-3" aria-label="Ссылки организаторов">
+              <h3 class="eyebrow text-ink-3">Организаторы</h3>
+              <ul class="mt-5 space-y-3 text-sm">
+                {
+                  c.footer.links.map((link) => (
+                    <li>
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="link-underline text-ink-2"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))
+                }
+              </ul>
+            </nav>
+          </Container>
+
+          <Container class="flex flex-wrap items-center justify-between gap-4 border-t border-line py-6 text-xs text-ink-3">
+            <span>© 2026 УрФУ · Уральский институт управления РАНХиГС</span>
+            <a href="/" class="link-underline">← Все варианты дизайна</a>
+          </Container>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    import { initKinetic } from '~/scripts/kinetic';
+    initKinetic();
+  </script>
+</BaseLayout>

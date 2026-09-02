@@ -3,17 +3,16 @@
  *
  * Что делает: светлая тёплая тема — бумажно-песочный фон, мягкий янтарный
  * акцент, спокойный синий как вторичный цвет, крупные скругления. Описывает
- * фирменные приёмы варианта: мягкие солнечные лучи на фоне и «подушку» под
- * парящими 3D-объектами.
+ * фирменные приёмы варианта: солнечные лучи, тени-подушки под 3D-объектами,
+ * тёплые «якорные» секции, блики по краям и лёгкие пылинки/пузырьки.
  *
  * Как работает: переопределяет токены из @theme в `global.css` на классе
- * `.theme-sunlight`. Лучи — это не декоративный градиент «для красоты», а
- * источник света, согласованный с направлением света в 3D-сцене: и CSS-лучи,
- * и Three.js-сцена подсвечены сверху-слева, поэтому картинка читается цельно.
+ * `.theme-sunlight`. Лучи — источник света, согласованный с DirectionalLight
+ * в Three.js-сцене (`FloatingScene`): оба идут сверху-слева.
  *
  * Связан с: `src/styles/global.css`, `src/layouts/BaseLayout.astro`,
- * `src/components/decor/FloatingScene.astro` (Three.js-островок),
- * страницы прототипа варианта 3.
+ * `src/components/decor/FloatingScene.astro`, `src/scripts/floating-scene.ts`,
+ * страница `src/pages/proto/3.astro`.
  */
 
 .theme-sunlight {
@@ -43,6 +42,14 @@
   /* Onest мягче и шире Inter Tight — трекинг заголовков ослаблен. */
   --text-display--letter-spacing: -0.02em;
   --text-display--line-height: 0.98;
+
+  /*
+   * Display-шкала уменьшена: в этом варианте заголовок делит hero с 3D-сценой
+   * и живёт в 5–6 колонках, а Onest шире Inter Tight — на базовой шкале слово
+   * «Социальный» не влезало в колонку и рвалось переносом. Спокойный кегль
+   * заодно лучше отвечает настроению варианта.
+   */
+  --text-display: clamp(2.25rem, 5vw, 4.5rem);
 }
 
 /*
@@ -85,4 +92,81 @@
 
 .theme-sunlight .decor-float {
   animation: sunlight-float 7s ease-in-out infinite;
+}
+
+/*
+ * Тёплая «якорная» секция вместо тёмного invert: мягкий песочный фон
+ * и лёгкий янтарный градиент по верхнему краю.
+ */
+.theme-sunlight .section-warm {
+  background:
+    radial-gradient(
+      48rem 22rem at 8% 0%,
+      color-mix(in oklab, var(--color-accent) 14%, transparent),
+      transparent 70%
+    ),
+    var(--color-bg-alt);
+}
+
+/* Мягкая карточка: воздух, крупный радиус, размытая тень без жёсткого края. */
+.theme-sunlight .soft-card {
+  background-color: var(--color-surface);
+  border: 1px solid color-mix(in oklab, var(--color-line) 80%, transparent);
+  border-radius: var(--radius-card);
+  box-shadow:
+    0 1.25rem 2.5rem color-mix(in oklab, var(--color-ink) 6%, transparent),
+    0 0.25rem 0.75rem color-mix(in oklab, var(--color-accent) 5%, transparent);
+}
+
+/* Блик солнца у края секции — локальный декор, не перекрывает текст. */
+.theme-sunlight .decor-sun-gleam {
+  position: absolute;
+  pointer-events: none;
+  width: min(28rem, 70vw);
+  height: min(18rem, 40vw);
+  border-radius: 999px;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--color-accent) 18%, transparent),
+    transparent 72%
+  );
+  filter: blur(0.5rem);
+}
+
+/* Пылинки / пузырьки в свете — сдержанная CSS-анимация. */
+@keyframes sunlight-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate3d(0.4rem, -1.1rem, 0);
+    opacity: 0.7;
+  }
+}
+
+.theme-sunlight .decor-dust {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+  background-color: color-mix(in oklab, var(--color-accent) 35%, var(--color-surface));
+  animation: sunlight-drift 9s ease-in-out infinite;
+}
+
+.theme-sunlight .decor-bubble {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--color-accent-2) 28%, transparent);
+  background-color: color-mix(in oklab, var(--color-accent-2) 10%, transparent);
+  animation: sunlight-drift 11s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-sunlight .decor-float,
+  .theme-sunlight .decor-dust,
+  .theme-sunlight .decor-bubble {
+    animation: none;
+  }
 }

@@ -3,8 +3,10 @@
  *
  * Что делает: тёмная тема на глубоком синем с двумя акцентами — тёплым золотым
  * и холодным бирюзовым. Дополнительно описывает декоративные приёмы варианта:
- * фоновую сетку-координатную плоскость, светящиеся узлы социального графа и
- * угловые маркеры блоков.
+ * фоновую сетку-координатную плоскость, светящиеся узлы социального графа,
+ * угловые маркеры блоков (`.decor-corners` / `.decor-corners-full`), тонкое
+ * «стекло» шапки (`.glass-panel`), полупрозрачные панели (`.panel-surface`)
+ * и мягкое свечение CTA (`.glow-accent`).
  *
  * Как работает: переопределяет токены из @theme в `global.css` на классе
  * `.theme-navy`. Декор реализован CSS-паттернами и не требует изображений;
@@ -43,6 +45,13 @@
   /* Unbounded — широкий шрифт, ему нужен менее плотный трекинг заголовков. */
   --text-display--letter-spacing: -0.02em;
   --text-headline--letter-spacing: -0.01em;
+
+  /*
+   * Display-шкала здесь заметно меньше базовой: глифы Unbounded почти вдвое
+   * шире Inter Tight, и на общей шкале длинное слово «Социальный» не влезало
+   * в свою колонку и рвалось переносом.
+   */
+  --text-display: clamp(2.5rem, 5.8vw, 6rem);
 }
 
 /* Координатная сетка на фоне: намёк на измеримость социального капитала. */
@@ -82,6 +91,27 @@
   border-width: 0 1px 1px 0;
 }
 
+/* Четыре угловых маркера сразу — для крупных панелей и CTA. */
+.theme-navy .decor-corners-full {
+  position: relative;
+}
+
+.theme-navy .decor-corners-full::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--color-accent), var(--color-accent)) 0 0 / 0.875rem 1px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 0 0 / 1px 0.875rem no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 100% 0 / 0.875rem 1px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 100% 0 / 1px 0.875rem no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 0 100% / 0.875rem 1px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 0 100% / 1px 0.875rem no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 100% 100% / 0.875rem 1px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 100% 100% / 1px 0.875rem no-repeat;
+}
+
 /* Светящаяся точка-узел: используется как буллет и маркер активной секции. */
 .theme-navy .decor-node {
   width: 0.5rem;
@@ -89,4 +119,37 @@
   border-radius: 999px;
   background-color: var(--color-accent-2);
   box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-accent-2) 18%, transparent);
+}
+
+/* Золотой узел для выделенных пунктов таймлайна (highlight). */
+.theme-navy .decor-node-accent {
+  background-color: var(--color-accent);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-accent) 20%, transparent);
+}
+
+/* Тонкое «стекло» для sticky-шапки и плавающих панелей. */
+.theme-navy .glass-panel {
+  background-color: color-mix(in oklab, var(--color-bg) 72%, transparent);
+  border-color: color-mix(in oklab, var(--color-line-strong) 55%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Мягкое свечение золотой панели (финальный CTA). */
+.theme-navy .glow-accent {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-accent) 35%, transparent),
+    0 0 48px color-mix(in oklab, var(--color-accent) 12%, transparent);
+}
+
+/* Бирюзовая линия-разделитель с лёгким glow — для подписей спецификации. */
+.theme-navy .spec-rail {
+  border-left: 1px solid color-mix(in oklab, var(--color-accent-2) 45%, transparent);
+  box-shadow: -1px 0 12px color-mix(in oklab, var(--color-accent-2) 18%, transparent);
+}
+
+/* Полупрозрачная институциональная поверхность внутри тёмного фона. */
+.theme-navy .panel-surface {
+  background-color: color-mix(in oklab, var(--color-surface) 78%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-line) 80%, transparent);
 }

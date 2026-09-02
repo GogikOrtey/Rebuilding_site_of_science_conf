@@ -1,0 +1,163 @@
+---
+/**
+ * src/components/decor/KineticGrid.astro — интерактивная фоновая сетка (вариант 4).
+ *
+ * Что делает: рисует на canvas регулярную сетку точек, которая реагирует на
+ * курсор: точки рядом с указателем разбегаются от него, увеличиваются и
+ * подсвечиваются акцентным цветом. Служит «живым» фоном hero-секции темы
+ * `theme-kinetic`.
+ *
+ * Как работает: Canvas 2D без библиотек. Позиция курсора сглаживается
+ * интерполяцией, поэтому реакция выглядит инерционной, а не рывками. Цвета
+ * читаются из CSS-переменных темы через getComputedStyle — сетка автоматически
+ * совпадает с палитрой. Оптимизации: отрисовка только внутри вьюпорта
+ * (IntersectionObserver), пересчёт буфера по ResizeObserver с учётом
+ * devicePixelRatio, кадр по requestAnimationFrame. При `prefers-reduced-motion`
+ * рисуется один статичный кадр и цикл не запускается.
+ *
+ * Связан с: `src/styles/themes/kinetic.css` (палитра), `src/pages/proto/4.astro`.
+ */
+interface Props {
+  /** Шаг сетки в CSS-пикселях. Меньше значение — плотнее точки. */
+  step?: number;
+  /** Радиус влияния курсора в CSS-пикселях. */
+  radius?: number;
+  class?: string;
+}
+
+const { step = 34, radius = 190, class: className = '' } = Astro.props;
+---
+
+<canvas
+  class:list={['pointer-events-none absolute inset-0 size-full', className]}
+  data-kinetic-grid
+  data-step={step}
+  data-radius={radius}
+  aria-hidden="true"></canvas>
+
+<script>
+  /**
+   * Инициализирует все сетки на странице.
+   * Вызывается один раз при загрузке; каждый canvas получает свой цикл кадров.
+   */
+  function initKineticGrids(): void {
+    const canvases = document.querySelectorAll<HTMLCanvasElement>('[data-kinetic-grid]');
+    canvases.forEach(setupGrid);
+  }
+
+  /**
+   * Настраивает один canvas: буфер, наблюдатели, слушатель курсора и цикл кадров.
+   * Возвращает управление сразу — дальше всё живёт на событиях и rAF.
+   */
+  function setupGrid(canvas: HTMLCanvasElement): void {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const step = Number(canvas.dataset.step ?? 34);
+    const influence = Number(canvas.dataset.radius ?? 190);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const styles = getComputedStyle(canvas);
+    const dotColor = styles.getPropertyValue('--color-line').trim() || '#26262b';
+    const accentColor = styles.getPropertyValue('--color-accent').trim() || '#d4ff3f';
+
+    let width = 0;
+    let height = 0;
+    /** Позиция курсора и её сглаженная версия — источник инерции. */
+    const pointer = { x: -9999, y: -9999 };
+    const smooth = { x: -9999, y: -9999 };
+    let visible = true;
+    let frame = 0;
+
+    /** Подгоняет размер буфера под CSS-размер и плотность экрана. */
+    function resize(): void {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = rect.width;
+      height = rect.height;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (reduced) draw();
+    }
+
+    /**
+     * Рисует один кадр сетки: для каждой точки считает смещение и яркость
+     * по расстоянию до сглаженной позиции курсора.
+     */
+    function draw(): void {
+      ctx!.clearRect(0, 0, width, height);
+
+      for (let x = step / 2; x < width; x += step) {
+        for (let y = step / 2; y < height; y += step) {
+          const dx = x - smooth.x;
+          const dy = y - smooth.y;
+          const dist = Math.hypot(dx, dy);
+          // Насколько сильно точка «чувствует» курсор: 1 в центре, 0 на границе.
+          const force = dist < influence ? 1 - dist / influence : 0;
+          const eased = force * force;
+
+          const offsetX = dist > 0 ? (dx / dist) * eased * 16 : 0;
+          const offsetY = dist > 0 ? (dy / dist) * eased * 16 : 0;
+          const size = 1 + eased * 2.6;
+
+          ctx!.beginPath();
+          ctx!.arc(x + offsetX, y + offsetY, size, 0, Math.PI * 2);
+          ctx!.fillStyle = eased > 0.35 ? accentColor : dotColor;
+          ctx!.globalAlpha = 0.35 + eased * 0.65;
+          ctx!.fill();
+        }
+      }
+
+      ctx!.globalAlpha = 1;
+    }
+
+    /** Кадр анимации: догоняет курсор и перерисовывает сетку. */
+    function tick(): void {
+      smooth.x += (pointer.x - smooth.x) * 0.12;
+      smooth.y += (pointer.y - smooth.y) * 0.12;
+      draw();
+      frame = requestAnimationFrame(tick);
+    }
+
+    function onPointerMove(event: PointerEvent): void {
+      const rect = canvas.getBoundingClientRect();
+      pointer.x = event.clientX - rect.left;
+      pointer.y = event.clientY - rect.top;
+    }
+
+    /** Курсор ушёл со страницы — точки должны вернуться в сетку. */
+    function onPointerLeave(): void {
+      pointer.x = -9999;
+      pointer.y = -9999;
+    }
+
+    resize();
+
+    if (reduced) {
+      new ResizeObserver(resize).observe(canvas);
+      return;
+    }
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    document.addEventListener('pointerleave', onPointerLeave);
+    new ResizeObserver(resize).observe(canvas);
+
+    // Вне экрана цикл кадров останавливается: фон hero не греет процессор.
+    new IntersectionObserver((entries) => {
+      const next = entries[0]?.isIntersecting ?? false;
+      if (next === visible) return;
+      visible = next;
+      if (visible) {
+        frame = requestAnimationFrame(tick);
+      } else {
+        cancelAnimationFrame(frame);
+      }
+    }).observe(canvas);
+
+    frame = requestAnimationFrame(tick);
+  }
+
+  initKineticGrids();
+</script>

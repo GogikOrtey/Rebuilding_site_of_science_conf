@@ -12,8 +12,14 @@
  * `src/scripts/kinetic.ts` на GSAP + ScrollTrigger. Разделение нужно, чтобы
  * страница выглядела осмысленно и без JavaScript.
  *
+ * Важно: начальные состояния элементов, которыми управляет GSAP, задаются
+ * только внутри `html.js-kinetic` (класс ставит инлайн-скрипт страницы до
+ * первой отрисовки). Без JS контент виден сразу — прототип не превращается в
+ * пустой экран, если скрипт не загрузился.
+ *
  * Связан с: `src/styles/global.css`, `src/layouts/BaseLayout.astro`,
- * `src/scripts/kinetic.ts`, страницы прототипа варианта 4.
+ * `src/scripts/kinetic.ts`, `src/components/decor/KineticGrid.astro`,
+ * страницы прототипа варианта 4.
  */
 
 .theme-kinetic {
@@ -100,4 +106,201 @@
 .theme-kinetic .link-underline:hover::after,
 .theme-kinetic .link-underline:focus-visible::after {
   transform: scaleX(1);
+}
+
+/* --- Типографские приёмы --- */
+
+/*
+ * Контурный текст: заголовок как графический объект, а не как надпись.
+ * Цвет обводки задаётся отдельной переменной: `currentColor` здесь не годится,
+ * потому что сам цвет текста прозрачный — обводка стала бы невидимой.
+ */
+.theme-kinetic .text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--outline-color, var(--color-ink));
+  paint-order: stroke fill;
+}
+
+/* Лаймовый контур: используется для последней строки заголовка hero. */
+.theme-kinetic .text-outline-accent {
+  --outline-color: var(--color-accent);
+}
+
+/* Крупная цифра-«якорь» секции: почти прозрачная, работает как фон. */
+.theme-kinetic .ghost-number {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-line);
+  user-select: none;
+}
+
+/*
+ * Разряд под переменное начертание: вес буквы меняется от близости курсора
+ * (эффект «weight hover»). Плавность нужна, чтобы вес не дёргался покадрово.
+ *
+ * Буквы обёрнуты в слова и слова не переносятся внутри себя: без этого строка
+ * рвалась бы на произвольной букве, потому что каждая буква — inline-block.
+ */
+.theme-kinetic .weight-hover .wh-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.theme-kinetic .weight-hover .wh-char {
+  display: inline-block;
+  font-variation-settings: 'wght' var(--wght, 400);
+  transition: font-variation-settings 120ms linear;
+}
+
+/* --- Курсор --- */
+
+/*
+ * Кастомный курсор: точка + догоняющее кольцо. `mix-blend-mode: difference`
+ * даёт инверсию поверх любого фона, поэтому курсор виден и на лайме, и на чёрном.
+ * Показывается только на устройствах с реальным указателем.
+ */
+.theme-kinetic .cursor-dot,
+.theme-kinetic .cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 90;
+  border-radius: 999px;
+  pointer-events: none;
+  mix-blend-mode: difference;
+  opacity: 0;
+  will-change: transform;
+}
+
+.theme-kinetic .cursor-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: var(--color-ink);
+}
+
+.theme-kinetic .cursor-ring {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--color-ink);
+}
+
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .theme-kinetic .cursor-dot,
+  .theme-kinetic .cursor-ring {
+    display: none;
+  }
+}
+
+/* --- Кнопки --- */
+
+/* Магнитная кнопка: сдвиг за курсором делает GSAP, здесь только каркас. */
+.theme-kinetic .magnetic {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  overflow: hidden;
+  will-change: transform;
+}
+
+/* Заливка, наезжающая снизу на hover — вместо смены background-color. */
+.theme-kinetic .magnetic::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--color-accent-2);
+  transform: translateY(101%);
+  transition: transform var(--duration-base) var(--ease-out-quint);
+}
+
+.theme-kinetic .magnetic:hover::before,
+.theme-kinetic .magnetic:focus-visible::before {
+  transform: translateY(0);
+}
+
+/* Частица салюта по клику на CTA: разлёт считает Physics2DPlugin. */
+.theme-kinetic .burst-particle {
+  position: fixed;
+  z-index: 95;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* --- Фон и общий слой --- */
+
+/* Мелкое зерно поверх страницы: убирает «цифровую» плоскость тёмного фона. */
+.theme-kinetic .grain {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Полоса прогресса чтения: ширину скрабит ScrollTrigger. */
+.theme-kinetic .scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 85;
+  height: 2px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background-color: var(--color-accent);
+}
+
+/* --- Шапка --- */
+
+/*
+ * Шапка прозрачна над hero и «застекляется», когда страница прокручена
+ * (класс `is-stuck` ставит ScrollTrigger).
+ */
+.theme-kinetic .site-header {
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color var(--duration-base) var(--ease-out-quint),
+    border-color var(--duration-base) var(--ease-out-quint),
+    backdrop-filter var(--duration-base) var(--ease-out-quint);
+}
+
+.theme-kinetic .site-header.is-stuck {
+  background-color: color-mix(in oklab, var(--color-bg) 78%, transparent);
+  border-bottom-color: var(--color-line);
+  backdrop-filter: blur(14px);
+}
+
+/* --- Начальные состояния под GSAP (только когда скрипт работает) --- */
+
+/*
+ * Элементы, которые появляются анимацией. Прячем их лишь при наличии
+ * `js-kinetic`, иначе без JS страница осталась бы пустой.
+ */
+html.js-kinetic .theme-kinetic [data-hero-line] > *,
+html.js-kinetic .theme-kinetic [data-hero-eyebrow],
+html.js-kinetic .theme-kinetic [data-hero-lead],
+html.js-kinetic .theme-kinetic [data-hero-tail],
+html.js-kinetic .theme-kinetic [data-anim='rise'] {
+  opacity: 0;
+}
+
+/* Тело загрузчика: перекрывает страницу до окончания вступительной анимации. */
+.theme-kinetic .loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background-color: var(--color-bg);
+}
+
+html:not(.js-kinetic) .theme-kinetic .loader {
+  display: none;
 }

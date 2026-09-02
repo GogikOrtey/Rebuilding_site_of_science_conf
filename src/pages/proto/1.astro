@@ -1,0 +1,466 @@
+---
+/**
+ * src/pages/proto/1.astro — прототип визуального направления «Swiss Editorial».
+ *
+ * Что делает: показывает hero и ключевые секции сайта конференции в светлой
+ * издательской подаче: бумажный фон, плотный крупный гротеск, жёсткая сетка на
+ * тонких линейках, единственный оранжевый акцент и тёмные «якорные» секции,
+ * которые задают ритм страницы.
+ *
+ * Как работает: весь текст берётся из датафайлов (`src/data`), оформление — из
+ * токенов темы `theme-swiss`. Декор построен на границах и сетке, а не на
+ * изображениях и тенях, поэтому страница почти невесома и работает без JS
+ * (единственный скрипт — reveal при скролле из BaseLayout).
+ *
+ * Статус: служебный прототип для выбора направления, помечен noindex. После
+ * выбора направления секции выносятся в переиспользуемые компоненты.
+ *
+ * Связан с: `src/layouts/BaseLayout.astro`, `src/styles/themes/swiss.css`,
+ * `src/data/*`, `src/components/common/Container.astro`.
+ */
+import { Image } from 'astro:assets';
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Container from '~/components/common/Container.astro';
+import { getContent } from '~/data';
+import { getPortrait } from '~/data/people';
+import '~/styles/themes/swiss.css';
+
+const c = getContent('ru');
+
+/** Спецификация события в hero: короткие пары «подпись — значение». */
+const heroSpecs = [
+  { label: 'Даты', value: c.event.dateLabel },
+  { label: 'Место', value: `${c.event.city}, ${c.event.country}` },
+  { label: 'Формат', value: c.event.format },
+  { label: 'Языки', value: c.event.languages.join(' · ') },
+];
+
+/** В прототипе показываем шесть спикеров — этого достаточно для оценки блока. */
+const shownSpeakers = c.speakers.filter((s) => !s.pending).slice(0, 6);
+const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
+---
+
+<BaseLayout
+  title={`${c.hero.title} — вариант 1, Swiss Editorial`}
+  theme="theme-swiss"
+  noindex
+>
+  <!-- ШАПКА: тонкая, sticky, с одной акцентной кнопкой -->
+  <header
+    class="sticky top-0 z-50 border-b border-line bg-bg/85 backdrop-blur-md"
+  >
+    <Container class="flex h-16 items-center justify-between gap-6">
+      <a href="/proto/1" class="flex items-center gap-3" aria-label={c.hero.title}>
+        <svg viewBox="0 0 32 32" class="size-6" aria-hidden="true">
+          <path d="M10 22 L16 10 L23 18 M10 22 L23 18" fill="none" stroke="var(--color-accent)" stroke-width="1.6" stroke-linecap="round"></path>
+          <circle cx="10" cy="22" r="2.4" fill="var(--color-ink)"></circle>
+          <circle cx="16" cy="10" r="2.4" fill="var(--color-ink)"></circle>
+          <circle cx="23" cy="18" r="2.4" fill="var(--color-ink)"></circle>
+        </svg>
+        <span class="font-display text-sm font-semibold tracking-tight">
+          Социальный капитал<span class="text-ink-3"> / 2026</span>
+        </span>
+      </a>
+
+      <nav class="hidden items-center gap-7 lg:flex" aria-label="Основная навигация">
+        {
+          c.nav.map((item) => (
+            <a
+              href={item.href}
+              class="group relative text-sm text-ink-2 transition-colors duration-200 hover:text-ink"
+            >
+              {item.label}
+              {item.pending && <span class="ml-1 align-super text-[0.6rem] text-ink-3">•</span>}
+              <span class="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-accent transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+            </a>
+          ))
+        }
+      </nav>
+
+      <div class="flex items-center gap-4">
+        <a href="/en" class="text-sm text-ink-3 transition-colors hover:text-ink">EN</a>
+        <a
+          href="#registration"
+          class="bg-ink px-4 py-2 text-sm font-medium text-ink-inverse transition-colors duration-200 hover:bg-accent"
+        >
+          Регистрация
+        </a>
+      </div>
+    </Container>
+  </header>
+
+  <main id="main">
+    <!-- HERO: крупное название слева, спецификация события справа -->
+    <section class="border-b border-line">
+      <Container class="grid gap-x-12 gap-y-14 pt-16 pb-12 lg:grid-cols-12 lg:pt-24">
+        <div class="lg:col-span-8">
+          <p class="eyebrow text-accent" data-reveal>{c.hero.eyebrow}</p>
+
+          <h1 class="mt-7 font-display text-display font-semibold" data-reveal data-reveal-delay="80">
+            {
+              c.hero.titleLines.map((line, i) => (
+                <span class="block">
+                  {i === c.hero.titleLines.length - 1 ? <span class="text-accent">{line}</span> : line}
+                </span>
+              ))
+            }
+          </h1>
+        </div>
+
+        <!-- Спецификация: разделена линейками, читается как выходные данные -->
+        <dl class="self-end lg:col-span-4" data-reveal data-reveal-delay="160">
+          {
+            heroSpecs.map((spec) => (
+              <div class="flex items-baseline justify-between gap-4 border-t border-line py-3">
+                <dt class="text-sm text-ink-3">{spec.label}</dt>
+                <dd class="text-right font-display text-sm font-medium">{spec.value}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </Container>
+
+      <Container class="grid gap-x-12 gap-y-8 border-t border-line py-10 lg:grid-cols-12">
+        <p class="text-lead text-ink-2 lg:col-span-7" data-reveal>{c.hero.lead}</p>
+
+        <div class="flex flex-wrap items-start gap-4 lg:col-span-5 lg:justify-end" data-reveal data-reveal-delay="80">
+          <a
+            href={c.hero.primaryCta.href}
+            class="group inline-flex items-center gap-3 bg-accent px-6 py-3.5 font-medium text-on-accent transition-colors duration-200 hover:bg-ink"
+          >
+            {c.hero.primaryCta.label}
+            <span class="transition-transform duration-300 ease-out group-hover:translate-x-1" aria-hidden="true">→</span>
+          </a>
+          <a
+            href={c.hero.secondaryCta.href}
+            class="inline-flex items-center gap-3 border border-line-strong px-6 py-3.5 font-medium transition-colors duration-200 hover:bg-ink hover:text-ink-inverse"
+          >
+            {c.hero.secondaryCta.label}
+          </a>
+        </div>
+      </Container>
+    </section>
+
+    <!-- ЧТО ДАЁТ УЧАСТИЕ: шесть фактов на сетке из линеек, без карточек -->
+    <section id="about" class="border-b border-line">
+      <Container class="py-16 lg:py-24">
+        <div class="flex items-baseline justify-between gap-6 border-b border-line pb-6">
+          <h2 class="font-display text-headline font-semibold">{c.sectionTitles.keyFacts}</h2>
+          <span class="font-mono text-sm text-ink-3">01</span>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3">
+          {
+            c.keyFacts.map((fact, i) => (
+              <article
+                class="group border-b border-line px-0 py-8 md:px-8 md:odd:pl-0 lg:[&:nth-child(3n+1)]:pl-0 md:[&:not(:nth-child(2n))]:border-r lg:[&:not(:nth-child(3n))]:border-r"
+                data-reveal
+                data-reveal-delay={i * 70}
+              >
+                <span class="font-mono text-sm text-ink-3">0{i + 1}</span>
+                <h3 class="mt-4 font-display text-title font-semibold">{fact.title}</h3>
+                <p class="mt-3 text-ink-2">{fact.body}</p>
+                {fact.link && (
+                  <a
+                    href={fact.link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="mt-4 inline-flex items-center gap-2 text-sm font-medium text-accent"
+                  >
+                    {fact.link.label}
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                )}
+              </article>
+            ))
+          }
+        </div>
+      </Container>
+    </section>
+
+    <!-- ТЕМЫ: главный editorial-приём, крупный нумерованный список -->
+    <section id="topics" class="border-b border-line">
+      <Container class="py-16 lg:py-24">
+        <div class="flex items-baseline justify-between gap-6 border-b border-line pb-6">
+          <h2 class="font-display text-headline font-semibold">{c.sectionTitles.topics}</h2>
+          <span class="font-mono text-sm text-ink-3">02</span>
+        </div>
+
+        <ol class="mt-2">
+          {
+            c.topics.items.map((topic, i) => (
+              <li class="border-b border-line" data-reveal data-reveal-delay={i * 60}>
+                <a
+                  href="#registration"
+                  class="group grid grid-cols-[3rem_1fr_2rem] items-baseline gap-4 py-6 md:gap-8 md:py-8"
+                >
+                  <span class="font-mono text-sm text-ink-3 transition-colors duration-200 group-hover:text-accent">
+                    {topic.index}
+                  </span>
+                  <span class="font-display text-title font-medium transition-transform duration-300 ease-out group-hover:translate-x-2 md:text-[1.6rem] md:leading-tight">
+                    {topic.title}
+                  </span>
+                  <span
+                    class="justify-self-end text-ink-3 opacity-0 transition-all duration-300 ease-out group-hover:translate-x-1 group-hover:opacity-100"
+                    aria-hidden="true"
+                  >
+                    →
+                  </span>
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+
+        <p class="mt-8 max-w-xl text-ink-2">{c.topics.note}</p>
+      </Container>
+    </section>
+
+    <!-- КЛЮЧЕВЫЕ ДАТЫ: тёмная якорная секция, горизонтальный таймлайн -->
+    <section class="section-invert">
+      <Container class="py-16 lg:py-24">
+        <div class="flex items-baseline justify-between gap-6 border-b border-line pb-6">
+          <h2 class="font-display text-headline font-semibold">{c.sectionTitles.deadlines}</h2>
+          <span class="font-mono text-sm text-ink-3">03</span>
+        </div>
+
+        <ol class="grid md:grid-cols-3 lg:grid-cols-5">
+          {
+            c.deadlines.map((d, i) => (
+              <li
+                class="border-b border-line py-8 md:px-6 md:first:pl-0 lg:[&:not(:last-child)]:border-r"
+                data-reveal
+                data-reveal-delay={i * 80}
+              >
+                <div class="flex items-center gap-3">
+                  <span
+                    class:list={[
+                      'size-2 shrink-0 rounded-pill',
+                      d.highlight ? 'bg-accent' : 'bg-ink-3',
+                    ]}
+                    aria-hidden="true"
+                  ></span>
+                  <time datetime={d.dateISO} class="font-mono text-sm text-ink-2">
+                    {d.dateLabel}
+                  </time>
+                </div>
+                <h3
+                  class:list={[
+                    'mt-4 font-display text-title font-semibold',
+                    d.highlight && 'text-accent',
+                  ]}
+                >
+                  {d.title}
+                </h3>
+                {d.note && <p class="mt-2 text-sm text-ink-2">{d.note}</p>}
+              </li>
+            ))
+          }
+        </ol>
+      </Container>
+    </section>
+
+    <!-- СПИКЕРЫ: прямоугольные ч/б портреты, цвет появляется на hover -->
+    <section id="speakers" class="border-b border-line">
+      <Container class="py-16 lg:py-24">
+        <div class="flex items-baseline justify-between gap-6 border-b border-line pb-6">
+          <h2 class="font-display text-headline font-semibold">{c.sectionTitles.speakers}</h2>
+          <span class="font-mono text-sm text-ink-3">04</span>
+        </div>
+
+        <ul class="grid gap-x-8 gap-y-12 pt-12 sm:grid-cols-2 lg:grid-cols-3">
+          {
+            shownSpeakers.map((person, i) => {
+              const portrait = getPortrait(person.photoKey);
+              return (
+                <li class="group" data-reveal data-reveal-delay={i * 70}>
+                  {portrait && (
+                    <div class="overflow-hidden bg-surface-2">
+                      <Image
+                        src={portrait}
+                        alt={person.name}
+                        width={520}
+                        height={620}
+                        widths={[320, 520, 780]}
+                        sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
+                        class="aspect-[4/5] w-full object-cover grayscale transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:grayscale-0"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  <h3 class="mt-5 font-display text-title font-semibold">{person.name}</h3>
+                  <p class="mt-2 text-sm text-ink-2">{person.role}</p>
+                  <p class="mt-3 font-mono text-xs tracking-wide text-ink-3 uppercase">
+                    {person.country}
+                  </p>
+                </li>
+              );
+            })
+          }
+        </ul>
+
+        {
+          pendingSpeakers > 0 && (
+            <p class="mt-12 border-t border-line pt-6 text-sm text-ink-3">
+              Список спикеров пополняется — на согласовании ещё {pendingSpeakers}.
+            </p>
+          )
+        }
+      </Container>
+    </section>
+
+    <!-- ВРЕМЯ И ЯЗЫКИ: таблица на десктопе, стек карточек на мобильном -->
+    <section class="border-b border-line">
+      <Container class="py-16 lg:py-24">
+        <div class="flex items-baseline justify-between gap-6 border-b border-line pb-6">
+          <h2 class="font-display text-headline font-semibold">{c.sectionTitles.schedule}</h2>
+          <span class="font-mono text-sm text-ink-3">05</span>
+        </div>
+
+        <p class="mt-6 max-w-2xl text-ink-2">{c.schedule.note}</p>
+
+        <div class="mt-10 overflow-hidden">
+          <table class="hidden w-full border-collapse text-left sm:table">
+            <thead>
+              <tr class="border-b border-line-strong">
+                <th class="py-3 font-mono text-xs font-medium tracking-wider text-ink-3 uppercase">
+                  {c.schedule.columns.city}
+                </th>
+                <th class="py-3 font-mono text-xs font-medium tracking-wider text-ink-3 uppercase">
+                  UTC
+                </th>
+                <th class="py-3 font-mono text-xs font-medium tracking-wider text-ink-3 uppercase">
+                  {c.schedule.columns.start}
+                </th>
+                <th class="py-3 font-mono text-xs font-medium tracking-wider text-ink-3 uppercase">
+                  {c.schedule.columns.end}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                c.schedule.rows.map((row) => (
+                  <tr class="border-b border-line">
+                    <td
+                      class:list={[
+                        'py-4 font-display font-medium',
+                        row.primary && 'text-accent',
+                      ]}
+                    >
+                      {row.city}
+                    </td>
+                    <td class="py-4 font-mono text-sm text-ink-3">{row.utc}</td>
+                    <td class="py-4 font-mono">{row.start}</td>
+                    <td class="py-4 font-mono">{row.end}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+
+          <ul class="sm:hidden">
+            {
+              c.schedule.rows.map((row) => (
+                <li class="flex items-baseline justify-between gap-4 border-b border-line py-4">
+                  <div>
+                    <p class:list={['font-display font-medium', row.primary && 'text-accent']}>
+                      {row.city}
+                    </p>
+                    <p class="font-mono text-xs text-ink-3">{row.utc}</p>
+                  </div>
+                  <p class="font-mono">
+                    {row.start} — {row.end}
+                  </p>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <p class="mt-8 text-sm text-ink-3">
+          {c.schedule.languagesLabel}: <span class="text-ink">{c.event.languages.join(', ')}</span>
+        </p>
+      </Container>
+    </section>
+
+    <!-- ФИНАЛЬНЫЙ CTA: тёмная секция, одно утверждение и одно действие -->
+    <section id="registration" class="section-invert">
+      <Container class="py-20 lg:py-28">
+        <div class="grid gap-x-12 gap-y-10 lg:grid-cols-12 lg:items-end">
+          <div class="lg:col-span-8">
+            <p class="eyebrow text-accent" data-reveal>{c.sectionTitles.registration}</p>
+            <h2 class="mt-6 font-display text-headline font-semibold" data-reveal data-reveal-delay="80">
+              Доверие, репутация и связи — измеримый ресурс. Приезжайте разбираться вместе.
+            </h2>
+          </div>
+
+          <div class="lg:col-span-4 lg:justify-self-end" data-reveal data-reveal-delay="160">
+            <a
+              href="#registration"
+              class="group inline-flex items-center gap-3 bg-accent px-7 py-4 font-medium text-on-accent transition-colors duration-200 hover:bg-ink-inverse hover:text-ink-inverse"
+            >
+              {c.registration.title}
+              <span class="transition-transform duration-300 ease-out group-hover:translate-x-1" aria-hidden="true">→</span>
+            </a>
+            <p class="mt-4 max-w-xs text-sm text-ink-2">{c.registration.lead}</p>
+          </div>
+        </div>
+      </Container>
+    </section>
+
+    <!-- ПОДВАЛ -->
+    <footer id="contacts" class="bg-bg">
+      <Container class="grid gap-x-12 gap-y-10 py-14 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <p class="max-w-sm text-sm text-ink-2">{c.footer.note}</p>
+          <p class="mt-4 text-xs text-ink-3">{c.footer.imagesNote}</p>
+        </div>
+
+        <div class="lg:col-span-4">
+          <h3 class="eyebrow text-ink-3">{c.sectionTitles.contacts}</h3>
+          <ul class="mt-4 space-y-2 text-sm">
+            {
+              c.contacts[0]?.people.map((p) => (
+                <li>
+                  <span class="block font-medium">{p.name}</span>
+                  {p.email && (
+                    <a href={`mailto:${p.email}`} class="text-ink-2 transition-colors hover:text-accent">
+                      {p.email}
+                    </a>
+                  )}
+                  {p.phone && <span class="block text-ink-2">{p.phone}</span>}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <nav class="lg:col-span-3" aria-label="Ссылки организаторов">
+          <h3 class="eyebrow text-ink-3">Организаторы</h3>
+          <ul class="mt-4 space-y-2 text-sm">
+            {
+              c.footer.links.map((link) => (
+                <li>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-ink-2 transition-colors hover:text-accent"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </Container>
+
+      <Container class="flex flex-wrap items-center justify-between gap-4 border-t border-line py-6 text-xs text-ink-3">
+        <span>© 2026 УрФУ · Уральский институт управления РАНХиГС</span>
+        <a href="/" class="transition-colors hover:text-accent">← Все варианты дизайна</a>
+      </Container>
+    </footer>
+  </main>
+</BaseLayout>
