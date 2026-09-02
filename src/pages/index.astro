@@ -5,20 +5,26 @@
  * Что делает: показывает список четырёх прототипов дизайна с коротким
  * описанием каждого, чтобы их можно было быстро сравнить перед выбором.
  *
- * Как работает: страница служебная и помечена noindex. После того как
- * направление выбрано, этот файл заменяется настоящей главной страницей
- * конференции, а `src/pages/proto/*` удаляются.
+ * Как работает: страница служебная и помечена noindex. Внизу — кредит дизайнера
+ * из `c.footer.designCredit`. После того как направление выбрано, этот файл
+ * заменяется настоящей главной страницей конференции, а `src/pages/proto/*`
+ * удаляются.
  *
- * Связан с: `src/layouts/BaseLayout.astro`, страницы `src/pages/proto/*`.
+ * Связан с: `src/layouts/BaseLayout.astro`, страницы `src/pages/proto/*`,
+ * `src/data/*`.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Container from '~/components/common/Container.astro';
+import { getContent } from '~/data';
+import { withBase } from '~/i18n';
 import '~/styles/themes/swiss.css';
+
+const c = getContent('ru');
 
 const variants = [
   {
     n: '01',
-    href: '/proto/1',
+    href: withBase('/proto/1'),
     name: 'Swiss Editorial',
     idea: 'Светлая бумага, крупный плотный гротеск, жёсткая сетка с линейками, один оранжевый акцент. Тёмные «якорные» секции разбивают страницу по ритму.',
     mood: 'Строго, дорого, как научный журнал или биеннале',
@@ -26,7 +32,7 @@ const variants = [
   },
   {
     n: '02',
-    href: '/proto/2',
+    href: withBase('/proto/2'),
     name: 'Deep Blue Institutional',
     idea: 'Глубокий тёмно-синий, золотой и бирюзовый акценты, координатная сетка на фоне и живой граф связей как метафора социального капитала.',
     mood: 'Международный форум, технологично и представительно',
@@ -34,7 +40,7 @@ const variants = [
   },
   {
     n: '03',
-    href: '/proto/3',
+    href: withBase('/proto/3'),
     name: 'Soft Sunlight',
     idea: 'Тёплый бумажный фон, мягкие солнечные лучи, парящие low-poly объекты с округлыми гранями: пробирка с синей жидкостью, деревянные ступени и другие предметы.',
     mood: 'Спокойно, тепло, по-человечески',
@@ -42,7 +48,7 @@ const variants = [
   },
   {
     n: '04',
-    href: '/proto/4',
+    href: withBase('/proto/4'),
     name: 'Kinetic',
     idea: 'Почти чёрная база, кислотный лайм, крупная кинетическая типографика. Скролл-хореография: пины, построчные маски, горизонтальные ленты, параллакс.',
     mood: 'Энергично, современно, запоминается',
@@ -100,6 +106,17 @@ const variants = [
           ))
         }
       </ul>
+
+      <p class="mt-14 border-t border-line pt-6 text-xs text-ink-3">
+        <a
+          href={c.footer.designCredit.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-colors hover:text-accent"
+        >
+          {c.footer.designCredit.label}
+        </a>
+      </p>
     </Container>
   </main>
 </BaseLayout>

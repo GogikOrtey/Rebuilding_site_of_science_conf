@@ -24,6 +24,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import Container from '~/components/common/Container.astro';
 import { getContent } from '~/data';
 import { getPortrait } from '~/data/people';
+import { withBase } from '~/i18n';
 import '~/styles/themes/swiss.css';
 
 const c = getContent('ru');
@@ -51,7 +52,7 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
     class="sticky top-0 z-50 border-b border-line bg-bg/85 backdrop-blur-md"
   >
     <Container class="flex h-16 items-center justify-between gap-6">
-      <a href="/proto/1" class="flex items-center gap-3" aria-label={c.hero.title}>
+      <a href={withBase('/proto/1')} class="flex items-center gap-3" aria-label={c.hero.title}>
         <svg viewBox="0 0 32 32" class="size-6" aria-hidden="true">
           <path d="M10 22 L16 10 L23 18 M10 22 L23 18" fill="none" stroke="var(--color-accent)" stroke-width="1.6" stroke-linecap="round"></path>
           <circle cx="10" cy="22" r="2.4" fill="var(--color-ink)"></circle>
@@ -79,7 +80,7 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
       </nav>
 
       <div class="flex items-center gap-4">
-        <a href="/en" class="text-sm text-ink-3 transition-colors hover:text-ink">EN</a>
+        <a href={withBase('/en')} class="text-sm text-ink-3 transition-colors hover:text-ink">EN</a>
         <a
           href="#registration"
           class="bg-ink px-4 py-2 text-sm font-medium text-ink-inverse transition-colors duration-200 hover:bg-accent"
@@ -284,7 +285,7 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
                         height={620}
                         widths={[320, 520, 780]}
                         sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
-                        class="aspect-[4/5] w-full object-cover grayscale transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:grayscale-0"
+                        class="aspect-[4/5] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
                         loading="lazy"
                       />
                     </div>
@@ -459,7 +460,15 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
 
       <Container class="flex flex-wrap items-center justify-between gap-4 border-t border-line py-6 text-xs text-ink-3">
         <span>© 2026 УрФУ · Уральский институт управления РАНХиГС</span>
-        <a href="/" class="transition-colors hover:text-accent">← Все варианты дизайна</a>
+        <a
+          href={c.footer.designCredit.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-colors hover:text-accent"
+        >
+          {c.footer.designCredit.label}
+        </a>
+        <a href={withBase('/')} class="transition-colors hover:text-accent">← Все варианты дизайна</a>
       </Container>
     </footer>
   </main>

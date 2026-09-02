@@ -9,17 +9,20 @@
  * Как работает: Astro собирает `src/pages/**` в статический HTML в `dist/`,
  * который затем отдаётся nginx-ом с VPS. JS попадает в бандл только из
  * компонентов-островков (`client:*`), поэтому базовые страницы уезжают почти
- * без JavaScript.
+ * без JavaScript. Стенд: `https://lab.gogortey.ru/Rebuilding_site_of_science_conf/`
+ * (`base` в конфиге); прод-домен позже — `soc-innovations.urfu.ru`.
  *
  * Связан с: `src/styles/global.css` (точка входа Tailwind), `src/i18n/*`
- * (словари и хелперы локалей), `package.json` (скрипты dev/build).
+ * (словари и хелперы локалей + withBase), `package.json` (скрипты dev/build).
  */
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://soc-innovations.urfu.ru',
+  // Прод-домен позже: soc-innovations.urfu.ru. Сейчас стенд на lab.
+  site: 'https://lab.gogortey.ru',
+  base: '/Rebuilding_site_of_science_conf',
   output: 'static',
   trailingSlash: 'never',
 

@@ -244,6 +244,8 @@ export interface ConferenceContent {
   footer: {
     note: string;
     imagesNote: string;
+    /** Кредит дизайнера (ссылка в нижней полосе подвала). */
+    designCredit: Link;
     links: Link[];
   };
   /** Общие подписи интерфейса. */

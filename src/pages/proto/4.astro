@@ -37,6 +37,7 @@ import Container from '~/components/common/Container.astro';
 import KineticGrid from '~/components/decor/KineticGrid.astro';
 import { getContent } from '~/data';
 import { getPortrait } from '~/data/people';
+import { withBase } from '~/i18n';
 import '~/styles/themes/kinetic.css';
 
 const c = getContent('ru');
@@ -104,7 +105,7 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
   <!-- ШАПКА: прозрачная над hero, застекляется при скролле, уезжает вниз по движению -->
   <header class="site-header fixed inset-x-0 top-0 z-60" data-header>
     <Container class="flex h-20 items-center justify-between gap-6">
-      <a href="/proto/4" class="flex items-center gap-3" aria-label={c.hero.title} data-cursor="grow">
+      <a href={withBase('/proto/4')} class="flex items-center gap-3" aria-label={c.hero.title} data-cursor="grow">
         <span class="relative flex size-2.5">
           <span class="absolute inset-0 animate-ping rounded-pill bg-accent opacity-60"></span>
           <span class="relative size-2.5 rounded-pill bg-accent"></span>
@@ -129,7 +130,7 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
       </nav>
 
       <div class="flex items-center gap-5">
-        <a href="/en" class="text-sm text-ink-3 transition-colors hover:text-ink">EN</a>
+        <a href={withBase('/en')} class="text-sm text-ink-3 transition-colors hover:text-ink">EN</a>
         <a
           href="#registration"
           class="magnetic rounded-control bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent"
@@ -447,7 +448,7 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
                             height={620}
                             widths={[320, 520, 780]}
                             sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
-                            class="aspect-[4/5] w-full object-cover contrast-[1.05] grayscale transition-all duration-700 ease-out group-hover:scale-105 group-hover:grayscale-0"
+                            class="aspect-[4/5] w-full object-cover contrast-[1.05] transition-transform duration-700 ease-out group-hover:scale-105"
                             loading="lazy"
                           />
                         </div>
@@ -632,7 +633,15 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
 
           <Container class="flex flex-wrap items-center justify-between gap-4 border-t border-line py-6 text-xs text-ink-3">
             <span>© 2026 УрФУ · Уральский институт управления РАНХиГС</span>
-            <a href="/" class="link-underline">← Все варианты дизайна</a>
+            <a
+              href={c.footer.designCredit.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="link-underline"
+            >
+              {c.footer.designCredit.label}
+            </a>
+            <a href={withBase('/')} class="link-underline">← Все варианты дизайна</a>
           </Container>
         </footer>
       </main>

@@ -26,6 +26,7 @@ import Container from '~/components/common/Container.astro';
 import SocialGraph from '~/components/decor/SocialGraph.astro';
 import { getContent } from '~/data';
 import { getPortrait } from '~/data/people';
+import { withBase } from '~/i18n';
 import '~/styles/themes/navy.css';
 
 const c = getContent('ru');
@@ -51,7 +52,7 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
   <!-- ШАПКА: стеклянная sticky-панель, моно подписи, золотая CTA -->
   <header class="glass-panel sticky top-0 z-50 border-b">
     <Container class="flex h-16 items-center justify-between gap-6">
-      <a href="/proto/2" class="flex items-center gap-3" aria-label={c.hero.title}>
+      <a href={withBase('/proto/2')} class="flex items-center gap-3" aria-label={c.hero.title}>
         <svg viewBox="0 0 32 32" class="size-6" aria-hidden="true">
           <path
             d="M10 22 L16 10 L23 18 M10 22 L23 18"
@@ -85,7 +86,7 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
 
       <div class="flex items-center gap-4">
         <a
-          href="/en"
+          href={withBase('/en')}
           class="font-mono text-xs tracking-wider text-ink-3 uppercase transition-colors hover:text-ink"
         >
           EN
@@ -543,7 +544,15 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
         class="flex flex-wrap items-center justify-between gap-4 border-t border-line py-6 font-mono text-xs text-ink-3"
       >
         <span>© 2026 УрФУ · Уральский институт управления РАНХиГС</span>
-        <a href="/" class="transition-colors hover:text-accent">← Все варианты дизайна</a>
+        <a
+          href={c.footer.designCredit.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-colors hover:text-accent"
+        >
+          {c.footer.designCredit.label}
+        </a>
+        <a href={withBase('/')} class="transition-colors hover:text-accent">← Все варианты дизайна</a>
       </Container>
     </footer>
   </main>

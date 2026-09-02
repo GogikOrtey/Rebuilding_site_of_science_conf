@@ -21,7 +21,7 @@ import '~/styles/global.css';
 
 import { getContent } from '~/data';
 import type { Locale } from '~/data/types';
-import { getAlternatePath, getHtmlLang, getLocaleFromUrl, localizePath } from '~/i18n';
+import { getAlternatePath, getHtmlLang, getLocaleFromUrl, localizePath, withBase } from '~/i18n';
 
 interface Props {
   /** Заголовок страницы; если не задан — берётся из метаданных локали. */
@@ -111,7 +111,7 @@ const eventSchema = {
     <meta name="twitter:card" content="summary_large_image" />
 
     <meta name="theme-color" content="#0e0e0f" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
 
     {
       withEventSchema && (

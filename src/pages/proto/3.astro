@@ -24,6 +24,7 @@ import Container from '~/components/common/Container.astro';
 import FloatingScene from '~/components/decor/FloatingScene.astro';
 import { getContent } from '~/data';
 import { getPortrait } from '~/data/people';
+import { withBase } from '~/i18n';
 import '~/styles/themes/sunlight.css';
 
 const c = getContent('ru');
@@ -52,7 +53,7 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
       <div
         class="flex h-14 items-center justify-between gap-4 rounded-pill border border-line bg-bg/75 px-4 shadow-[0_0.75rem_2rem_color-mix(in_oklab,var(--color-ink)_6%,transparent)] backdrop-blur-md sm:px-6"
       >
-        <a href="/proto/3" class="flex items-center gap-3" aria-label={c.hero.title}>
+        <a href={withBase('/proto/3')} class="flex items-center gap-3" aria-label={c.hero.title}>
           <svg viewBox="0 0 32 32" class="size-7" aria-hidden="true">
             <circle cx="16" cy="16" r="14" fill="color-mix(in oklab, var(--color-accent) 18%, transparent)"></circle>
             <path
@@ -86,7 +87,7 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
         </nav>
 
         <div class="flex items-center gap-3 sm:gap-4">
-          <a href="/en" class="text-sm text-ink-3 transition-colors hover:text-ink">EN</a>
+          <a href={withBase('/en')} class="text-sm text-ink-3 transition-colors hover:text-ink">EN</a>
           <a
             href="#registration"
             class="rounded-control bg-accent px-4 py-2 text-sm font-medium text-on-accent shadow-[0_0.5rem_1.25rem_color-mix(in_oklab,var(--color-accent)_28%,transparent)] transition-transform duration-200 hover:-translate-y-0.5"
@@ -487,7 +488,15 @@ const pendingSpeakers = c.speakers.filter((s) => s.pending).length;
 
       <Container class="flex flex-wrap items-center justify-between gap-4 border-t border-line py-6 text-xs text-ink-3">
         <span>© 2026 УрФУ · Уральский институт управления РАНХиГС</span>
-        <a href="/" class="transition-colors hover:text-accent">← Все варианты дизайна</a>
+        <a
+          href={c.footer.designCredit.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-colors hover:text-accent"
+        >
+          {c.footer.designCredit.label}
+        </a>
+        <a href={withBase('/')} class="transition-colors hover:text-accent">← Все варианты дизайна</a>
       </Container>
     </footer>
   </main>

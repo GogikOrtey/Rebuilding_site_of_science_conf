@@ -534,6 +534,11 @@ export const ru: ConferenceContent = {
   footer: {
     note: 'Международная научно-практическая конференция «Социальный капитал малого и среднего бизнеса». Организаторы — УрФУ и Уральский институт управления РАНХиГС.',
     imagesNote: 'Иллюстрации взяты из открытых источников.',
+    designCredit: {
+      label: 'Примеры дизайна предоставил Георгий Орлов',
+      href: externalLinks.designerVk,
+      external: true,
+    },
     links: [
       { label: 'УрФУ', href: externalLinks.urfu, external: true },
       { label: 'УИУ РАНХиГС', href: externalLinks.ranepa, external: true },

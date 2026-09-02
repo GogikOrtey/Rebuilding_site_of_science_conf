@@ -592,6 +592,11 @@ export const en: ConferenceContent = {
   footer: {
     note: 'International academic and practice-oriented conference "Social Capital of Small and Medium-Sized Business". Organised by UrFU and the Ural Institute of Management, RANEPA.',
     imagesNote: 'Illustrations are drawn from open sources.',
+    designCredit: {
+      label: 'Design examples by Georgiy Orlov',
+      href: externalLinks.designerVk,
+      external: true,
+    },
     links: [
       { label: 'UrFU', href: externalLinks.urfu, external: true },
       {
